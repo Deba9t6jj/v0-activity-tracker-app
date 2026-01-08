@@ -20,7 +20,8 @@ import {
   Coins,
   ImageIcon,
 } from "lucide-react"
-import { ExpandableTabs } from "@/components/ui/expandable-tabs"
+import { Tab } from "@/components/ui/tab"
+import { StatCard } from "@/components/ui/stat-card"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -117,14 +118,49 @@ export function DashboardScreen({ farcasterUsername, walletAddress, onNavigate }
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         {/* Title & Tabs */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight mb-6">Your Activity Overview</h1>
-          <ExpandableTabs
+        <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight">Your Activity Overview</h1>
+            <p className="text-muted-foreground mt-1">
+              A summary of your Farcaster and wallet activity.
+            </p>
+          </div>
+          <Tab
             tabs={tabs}
             selected={activeTab}
             onChange={handleTabChange}
-            activeColor="text-chart-2"
-            className="w-fit"
+          />
+        </div>
+
+        {/* Key Metrics */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <StatCard
+            title="Followers"
+            value={farcasterData?.user?.follower_count?.toLocaleString() || 0}
+            icon={Users}
+            color="bg-sky-500"
+            loading={farcasterLoading}
+          />
+          <StatCard
+            title="Recent Likes"
+            value={farcasterData?.totalLikes?.toLocaleString() || 0}
+            icon={Heart}
+            color="bg-rose-500"
+            loading={farcasterLoading}
+          />
+          <StatCard
+            title="Balance (ETH)"
+            value={walletData?.balance?.balanceEth || 0}
+            icon={Wallet}
+            color="bg-emerald-500"
+            loading={walletLoading}
+          />
+          <StatCard
+            title="NFTs"
+            value={nftData?.nfts?.length || 0}
+            icon={ImageIcon}
+            color="bg-purple-500"
+            loading={nftLoading}
           />
         </div>
 
@@ -132,19 +168,16 @@ export function DashboardScreen({ farcasterUsername, walletAddress, onNavigate }
         <div className="grid md:grid-cols-2 gap-6">
           {/* Social Activity Section */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-            <Card className="rounded-2xl border-border/50 h-full">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <MessageSquare className="w-5 h-5 text-chart-2" />
+            <Card className="rounded-2xl border-border/60 h-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-sky-500/10 text-sky-500">
+                    <MessageSquare className="w-5 h-5" />
+                  </div>
                   Farcaster Activity
-                  {farcasterUsername && (
-                    <Badge variant="outline" className="ml-auto font-normal">
-                      @{farcasterUsername}
-                    </Badge>
-                  )}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4">
                 {farcasterLoading ? (
                   <div className="space-y-4">
                     <div className="flex items-center gap-4">
@@ -154,19 +187,12 @@ export function DashboardScreen({ farcasterUsername, walletAddress, onNavigate }
                         <Skeleton className="h-4 w-48" />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <Skeleton className="h-20 rounded-xl" />
-                      <Skeleton className="h-20 rounded-xl" />
-                    </div>
-                    <div className="space-y-3">
-                      <Skeleton className="h-24 rounded-xl" />
-                      <Skeleton className="h-24 rounded-xl" />
-                    </div>
+                    <Skeleton className="h-24 rounded-xl" />
                   </div>
                 ) : farcasterData?.user ? (
                   <>
                     <div className="flex items-center gap-4 p-4 bg-secondary/50 rounded-xl">
-                      <Avatar className="w-16 h-16 border-2 border-chart-2/20">
+                      <Avatar className="w-16 h-16 border-2 border-sky-500/20">
                         <AvatarImage
                           src={farcasterData.user.pfp_url || "/placeholder.svg"}
                           alt={farcasterData.user.display_name}
@@ -184,52 +210,13 @@ export function DashboardScreen({ farcasterUsername, walletAddress, onNavigate }
                       </div>
                     </div>
 
-                    {/* Stats Row */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-secondary/50 rounded-xl p-4">
-                        <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                          <Users className="w-4 h-4" />
-                          <span className="text-xs">Followers</span>
-                        </div>
-                        <p className="text-2xl font-semibold">
-                          {farcasterData.user.follower_count?.toLocaleString() || 0}
-                        </p>
-                      </div>
-                      <div className="bg-secondary/50 rounded-xl p-4">
-                        <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                          <Users className="w-4 h-4" />
-                          <span className="text-xs">Following</span>
-                        </div>
-                        <p className="text-2xl font-semibold">
-                          {farcasterData.user.following_count?.toLocaleString() || 0}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Engagement Stats */}
-                    <div className="flex gap-6">
-                      <div className="flex items-center gap-2">
-                        <Heart className="w-4 h-4 text-rose-500" />
-                        <span className="text-sm text-muted-foreground">
-                          {farcasterData.totalLikes?.toLocaleString() || 0} recent likes
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MessageCircle className="w-4 h-4 text-chart-2" />
-                        <span className="text-sm text-muted-foreground">
-                          {farcasterData.totalComments?.toLocaleString() || 0} comments
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Recent Posts */}
                     <div>
                       <h4 className="text-sm font-medium mb-3">Recent Casts</h4>
                       <div className="space-y-3">
                         {farcasterData.casts?.slice(0, 3).map((cast) => (
                           <div
                             key={cast.hash}
-                            className="bg-secondary/30 rounded-xl p-4 hover:bg-secondary/50 transition-colors cursor-pointer"
+                            className="bg-secondary/50 rounded-xl p-4 hover:bg-secondary transition-colors cursor-pointer"
                           >
                             <p className="text-sm mb-2 line-clamp-2">{cast.text}</p>
                             <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -268,37 +255,24 @@ export function DashboardScreen({ farcasterUsername, walletAddress, onNavigate }
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
           >
-            <Card className="rounded-2xl border-border/50 h-full">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Wallet className="w-5 h-5 text-chart-1" />
+            <Card className="rounded-2xl border-border/60 h-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-emerald-500/10 text-emerald-500">
+                    <Wallet className="w-5 h-5" />
+                  </div>
                   Base Wallet Activity
-                  {walletAddress && (
-                    <Badge variant="outline" className="ml-auto font-mono text-xs font-normal">
-                      {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
-                    </Badge>
-                  )}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4">
                 {walletLoading ? (
-                  <div className="space-y-4">
-                    <Skeleton className="h-28 rounded-xl" />
-                    <div className="space-y-2">
-                      <Skeleton className="h-14 rounded-xl" />
-                      <Skeleton className="h-14 rounded-xl" />
-                      <Skeleton className="h-14 rounded-xl" />
-                    </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-14 rounded-xl" />
+                    <Skeleton className="h-14 rounded-xl" />
+                    <Skeleton className="h-14 rounded-xl" />
                   </div>
                 ) : walletData?.balance ? (
                   <>
-                    {/* Balance */}
-                    <div className="bg-gradient-to-br from-chart-1/10 to-chart-2/10 rounded-xl p-6">
-                      <p className="text-sm text-muted-foreground mb-1">Current Balance</p>
-                      <p className="text-3xl font-semibold">{walletData.balance.balanceEth}</p>
-                      <p className="text-sm text-muted-foreground mt-1">{walletData.balance.balanceUsd}</p>
-                    </div>
-
                     <div>
                       <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
                         <ImageIcon className="w-4 h-4" />
@@ -318,7 +292,7 @@ export function DashboardScreen({ farcasterUsername, walletAddress, onNavigate }
                               href={nft.opensea_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="aspect-square rounded-xl overflow-hidden bg-secondary/50 hover:ring-2 hover:ring-chart-1/50 transition-all group relative"
+                              className="aspect-square rounded-xl overflow-hidden bg-secondary/50 hover:ring-2 hover:ring-purple-500/50 transition-all group relative"
                             >
                               {nft.image_url ? (
                                 <img
@@ -338,7 +312,7 @@ export function DashboardScreen({ farcasterUsername, walletAddress, onNavigate }
                           ))}
                         </div>
                       ) : (
-                        <div className="bg-secondary/30 rounded-xl p-4 text-center">
+                        <div className="bg-secondary/50 rounded-xl p-4 text-center">
                           <ImageIcon className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
                           <p className="text-sm text-muted-foreground">No NFTs found on Base</p>
                         </div>
@@ -350,28 +324,6 @@ export function DashboardScreen({ farcasterUsername, walletAddress, onNavigate }
                       )}
                     </div>
 
-                    {/* Token Holdings */}
-                    {walletData.tokens && walletData.tokens.length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-                          <Coins className="w-4 h-4" />
-                          Token Holdings
-                        </h4>
-                        <div className="grid grid-cols-2 gap-2">
-                          {walletData.tokens.slice(0, 4).map((token, idx) => (
-                            <div key={idx} className="bg-secondary/30 rounded-xl p-3">
-                              <p className="text-sm font-medium truncate">{token.symbol}</p>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {Number(token.balance).toLocaleString(undefined, { maximumFractionDigits: 4 })}
-                              </p>
-                              {token.balanceUsd && <p className="text-xs text-muted-foreground">{token.balanceUsd}</p>}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Recent Transactions */}
                     <div>
                       <h4 className="text-sm font-medium mb-3">Recent Transactions</h4>
                       <div className="space-y-2">
@@ -381,7 +333,7 @@ export function DashboardScreen({ farcasterUsername, walletAddress, onNavigate }
                             href={`https://basescan.org/tx/${tx.hash}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-3 bg-secondary/30 rounded-xl p-3 hover:bg-secondary/50 transition-colors cursor-pointer"
+                            className="flex items-center gap-3 bg-secondary/50 rounded-xl p-3 hover:bg-secondary transition-colors cursor-pointer"
                           >
                             <div
                               className={`w-8 h-8 rounded-full flex items-center justify-center ${
@@ -412,9 +364,29 @@ export function DashboardScreen({ farcasterUsername, walletAddress, onNavigate }
                       </div>
                     </div>
 
+                    {walletData.tokens && walletData.tokens.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                          <Coins className="w-4 h-4" />
+                          Token Holdings
+                        </h4>
+                        <div className="grid grid-cols-2 gap-2">
+                          {walletData.tokens.slice(0, 4).map((token, idx) => (
+                            <div key={idx} className="bg-secondary/50 rounded-xl p-3">
+                              <p className="text-sm font-medium truncate">{token.symbol}</p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {Number(token.balance).toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                              </p>
+                              {token.balanceUsd && <p className="text-xs text-muted-foreground">{token.balanceUsd}</p>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <Button
                       variant="outline"
-                      className="w-full rounded-xl bg-transparent"
+                      className="w-full rounded-lg bg-transparent"
                       onClick={() => window.open(`https://basescan.org/address/${walletAddress}`, "_blank")}
                     >
                       <ExternalLink className="w-4 h-4 mr-2" />
@@ -434,36 +406,6 @@ export function DashboardScreen({ farcasterUsername, walletAddress, onNavigate }
             </Card>
           </motion.div>
         </div>
-
-        {/* Quick Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="mt-6"
-        >
-          <Card className="rounded-2xl border-border/50">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-chart-4/10 flex items-center justify-center">
-                    <TrendingUp className="w-5 h-5 text-chart-4" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Activity Score: {farcasterData?.user ? "Good" : "N/A"}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {farcasterData?.user ? "Keep up the engagement!" : "Connect your accounts to see your score"}
-                    </p>
-                  </div>
-                </div>
-                <Button onClick={() => onNavigate("guide")} className="rounded-xl">
-                  View Improvement Tips
-                  <ArrowUpRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
       </main>
     </div>
   )
