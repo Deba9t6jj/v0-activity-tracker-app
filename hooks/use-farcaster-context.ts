@@ -22,24 +22,26 @@ export function useFarcasterContext() {
 
   useEffect(() => {
     const load = async () => {
-      const timeout = new Promise<null>((resolve) => {
-        setTimeout(() => resolve(null), 1500) // 1.5s timeout
-      })
-
       try {
         // Dynamically import SDK to prevent issues in non-frame environments
         const { default: sdk } = await import("@farcaster/frame-sdk")
 
+        // Must be called even before context is loaded per Farcaster docs
+        sdk.actions.ready()
+
+        // Shorter timeout for context - if we're in a frame, context should be fast
+        const timeout = new Promise<null>((resolve) => {
+          setTimeout(() => resolve(null), 2000)
+        })
+
         // Race between SDK context and timeout
         const frameContext = await Promise.race([sdk.context, timeout])
 
-        if (frameContext && typeof frameContext === "object" && "user" in frameContext) {
+        if (frameContext && typeof frameContext === "object") {
           setContext(frameContext as FrameContext)
           setIsInFrame(true)
-          // Signal that the app is ready to be displayed
-          sdk.actions.ready()
         } else {
-          // Timeout reached or no user context - running as standalone
+          // Timeout reached - running as standalone
           setIsInFrame(false)
         }
       } catch (error) {
