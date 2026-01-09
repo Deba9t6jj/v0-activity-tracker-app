@@ -9,54 +9,48 @@ import "./globals.css"
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
-export async function generateMetadata(): Promise<Metadata> {
-  const ROOT_URL = process.env.NEXT_PUBLIC_URL || "https://activity-tracker.vercel.app"
-
-  return {
-    title: "Activity Tracker - Track Farcaster Activity",
-    description: "Track your Farcaster social activity with beautiful analytics and insights.",
-    generator: "v0.app",
-    icons: {
-      icon: [
-        {
-          url: "/icon-light-32x32.png",
-          media: "(prefers-color-scheme: light)",
+export const metadata: Metadata = {
+  title: "Activity Tracker - Track Farcaster Activity",
+  description: "Track your Farcaster social activity with beautiful analytics and insights.",
+  generator: "v0.app",
+  icons: {
+    icon: [
+      {
+        url: "/icon-light-32x32.png",
+        media: "(prefers-color-scheme: light)",
+      },
+      {
+        url: "/icon-dark-32x32.png",
+        media: "(prefers-color-scheme: dark)",
+      },
+      {
+        url: "/icon.svg",
+        type: "image/svg+xml",
+      },
+    ],
+    apple: "/apple-icon.png",
+  },
+  openGraph: {
+    title: minikitConfig.miniapp.ogTitle,
+    description: minikitConfig.miniapp.ogDescription,
+    images: [minikitConfig.miniapp.ogImageUrl],
+  },
+  other: {
+    "fc:miniapp": JSON.stringify({
+      version: "next",
+      imageUrl: "https://v0-activity-tracker-app-gold.vercel.app/og-image.png",
+      button: {
+        title: "Track Activity",
+        action: {
+          type: "launch_miniapp",
+          name: minikitConfig.miniapp.name,
+          url: "https://v0-activity-tracker-app-gold.vercel.app",
+          splashImageUrl: minikitConfig.miniapp.splashImageUrl,
+          splashBackgroundColor: minikitConfig.miniapp.splashBackgroundColor,
         },
-        {
-          url: "/icon-dark-32x32.png",
-          media: "(prefers-color-scheme: dark)",
-        },
-        {
-          url: "/icon.svg",
-          type: "image/svg+xml",
-        },
-      ],
-      apple: "/apple-icon.png",
-    },
-    openGraph: {
-      title: minikitConfig.miniapp.ogTitle,
-      description: minikitConfig.miniapp.ogDescription,
-      images: [minikitConfig.miniapp.ogImageUrl],
-    },
-    // Farcaster Mini App embed metadata
-    other: {
-      "base:app_id": "69613b498a6eeb04b568da24",
-      "fc:miniapp": JSON.stringify({
-        version: "next",
-        imageUrl: `${ROOT_URL}/og-image.png`,
-        button: {
-          title: "Track Activity",
-          action: {
-            type: "launch_miniapp",
-            name: minikitConfig.miniapp.name,
-            url: ROOT_URL,
-            splashImageUrl: minikitConfig.miniapp.splashImageUrl,
-            splashBackgroundColor: minikitConfig.miniapp.splashBackgroundColor,
-          },
-        },
-      }),
-    },
-  }
+      },
+    }),
+  },
 }
 
 export const viewport: Viewport = {
