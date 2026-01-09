@@ -25,7 +25,7 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/40 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -37,6 +37,7 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
           <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
             <Sparkles className="w-7 h-7 text-primary" />
           </div>
+          <span className="text-2xl font-semibold tracking-tight">Activity Tracker</span>
         </div>
 
         {/* Card */}

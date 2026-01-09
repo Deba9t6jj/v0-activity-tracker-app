@@ -87,7 +87,7 @@ export function DashboardScreen({ farcasterUsername, walletAddress, onNavigate }
   }
 
   return (
-    <div className="min-h-screen bg-secondary/30">
+    <div className="min-h-screen">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -138,29 +138,33 @@ export function DashboardScreen({ farcasterUsername, walletAddress, onNavigate }
             title="Followers"
             value={farcasterData?.user?.follower_count?.toLocaleString() || 0}
             icon={Users}
-            color="bg-sky-500"
+            variant="blue"
             loading={farcasterLoading}
+            delay={0}
           />
           <StatCard
-            title="Recent Likes"
-            value={farcasterData?.totalLikes?.toLocaleString() || 0}
-            icon={Heart}
-            color="bg-rose-500"
+            title="Following"
+            value={farcasterData?.user?.following_count?.toLocaleString() || 0}
+            icon={Users}
+            variant="blue"
             loading={farcasterLoading}
+            delay={0.1}
           />
           <StatCard
-            title="Balance (ETH)"
-            value={walletData?.balance?.balanceEth || 0}
+            title="Balance (USD)"
+            value={walletData?.balance?.balanceUsd || "$0.00"}
             icon={Wallet}
-            color="bg-emerald-500"
+            variant="purple"
             loading={walletLoading}
+            delay={0.2}
           />
           <StatCard
             title="NFTs"
             value={nftData?.nfts?.length || 0}
             icon={ImageIcon}
-            color="bg-purple-500"
+            variant="purple"
             loading={nftLoading}
+            delay={0.3}
           />
         </div>
 
@@ -168,10 +172,10 @@ export function DashboardScreen({ farcasterUsername, walletAddress, onNavigate }
         <div className="grid md:grid-cols-2 gap-6">
           {/* Social Activity Section */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-            <Card className="rounded-2xl border-border/60 h-full">
+            <Card className="rounded-2xl bg-white/20 backdrop-blur-lg border border-white/30 shadow-lg h-full">
               <CardHeader>
-                <CardTitle className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-sky-500/10 text-sky-500">
+                <CardTitle className="flex items-center gap-3 text-white">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-sky-500/20 text-sky-300">
                     <MessageSquare className="w-5 h-5" />
                   </div>
                   Farcaster Activity
@@ -255,10 +259,10 @@ export function DashboardScreen({ farcasterUsername, walletAddress, onNavigate }
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
           >
-            <Card className="rounded-2xl border-border/60 h-full">
+            <Card className="rounded-2xl bg-white/20 backdrop-blur-lg border border-white/30 shadow-lg h-full">
               <CardHeader>
-                <CardTitle className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-emerald-500/10 text-emerald-500">
+                <CardTitle className="flex items-center gap-3 text-white">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-500/20 text-purple-300">
                     <Wallet className="w-5 h-5" />
                   </div>
                   Base Wallet Activity
@@ -406,6 +410,36 @@ export function DashboardScreen({ farcasterUsername, walletAddress, onNavigate }
             </Card>
           </motion.div>
         </div>
+
+        {/* Quick Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="mt-6"
+        >
+          <Card className="rounded-2xl bg-white/20 backdrop-blur-lg border border-white/30 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-sky-500/20 flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-sky-300" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-white">Activity Score: {farcasterData?.user ? "Good" : "N/A"}</p>
+                    <p className="text-sm text-white/80">
+                      {farcasterData?.user ? "Keep up the engagement!" : "Connect your accounts to see your score"}
+                    </p>
+                  </div>
+                </div>
+                <Button onClick={() => onNavigate("guide")} className="rounded-xl bg-white/20 text-white hover:bg-white/30">
+                  View Improvement Tips
+                  <ArrowUpRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </main>
     </div>
   )
