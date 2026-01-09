@@ -40,6 +40,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     // Farcaster Mini App embed metadata
     other: {
+      "base:app_id": "69613b498a6eeb04b568da24",
       "fc:miniapp": JSON.stringify({
         version: "next",
         imageUrl: `${ROOT_URL}/og-image.png`,

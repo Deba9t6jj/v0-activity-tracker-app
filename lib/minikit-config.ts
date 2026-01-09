@@ -27,7 +27,7 @@ export const minikitConfig = {
     tags: ["farcaster", "analytics", "social", "tracker", "activity"],
     heroImageUrl: `${ROOT_URL}/hero.png`,
     tagline: "Track your Farcaster journey",
-    ogTitle: "Activity Tracker - Farcaster Analytics",
+    ogTitle: "Activity Tracker",
     ogDescription: "Track your Farcaster social activity with beautiful analytics and insights.",
     ogImageUrl: `${ROOT_URL}/og-image.png`,
     noindex: false,
