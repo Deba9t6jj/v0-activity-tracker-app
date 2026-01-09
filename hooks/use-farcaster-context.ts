@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 
 type FrameContext = {
   user?: {
@@ -19,33 +19,34 @@ export function useFarcasterContext() {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false)
   const [context, setContext] = useState<FrameContext | null>(null)
   const [isInFrame, setIsInFrame] = useState(false)
+  const readyCalledRef = useRef(false)
 
   useEffect(() => {
     const load = async () => {
       try {
-        // Dynamically import SDK to prevent issues in non-frame environments
+        // Dynamically import SDK
         const { default: sdk } = await import("@farcaster/frame-sdk")
 
-        // Must be called even before context is loaded per Farcaster docs
-        sdk.actions.ready()
+        // This is critical - Farcaster requires ready() to be called ASAP
+        if (!readyCalledRef.current) {
+          readyCalledRef.current = true
+          await sdk.actions.ready()
+        }
 
-        // Shorter timeout for context - if we're in a frame, context should be fast
+        // Now get context with a timeout
         const timeout = new Promise<null>((resolve) => {
           setTimeout(() => resolve(null), 2000)
         })
 
-        // Race between SDK context and timeout
         const frameContext = await Promise.race([sdk.context, timeout])
 
         if (frameContext && typeof frameContext === "object") {
           setContext(frameContext as FrameContext)
           setIsInFrame(true)
         } else {
-          // Timeout reached - running as standalone
           setIsInFrame(false)
         }
       } catch (error) {
-        // Not in a frame context, running as standalone app
         console.log("Not in Farcaster frame context")
         setIsInFrame(false)
       }
