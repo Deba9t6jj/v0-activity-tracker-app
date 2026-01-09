@@ -74,6 +74,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="base:app_id" content="69613b498a6eeb04b568da24" />
+      </head>
       <body className={`font-sans antialiased`}>
         <Providers>{children}</Providers>
         <Analytics />
