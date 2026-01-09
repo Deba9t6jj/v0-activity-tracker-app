@@ -2,31 +2,10 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import {
-  Activity,
-  MessageSquare,
-  Wallet,
-  Heart,
-  MessageCircle,
-  Users,
-  ArrowUpRight,
-  ArrowDownLeft,
-  ExternalLink,
-  TrendingUp,
-  Settings,
-  BarChart3,
-  Lightbulb,
-  RefreshCw,
-  Coins,
-  ImageIcon,
-} from "lucide-react"
-import { ExpandableTabs } from "@/components/ui/expandable-tabs"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Activity, MessageSquare, Heart, MessageCircle, RefreshCw, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useFarcasterData, useWalletData, useNFTData } from "@/hooks/use-activity-data"
+import { useFarcasterData } from "@/hooks/use-activity-data"
 
 interface DashboardScreenProps {
   farcasterUsername: string
@@ -49,421 +28,383 @@ function formatRelativeTime(timestamp: string): string {
   return `${Math.floor(days / 7)}w ago`
 }
 
-export function DashboardScreen({ farcasterUsername, walletAddress, onNavigate }: DashboardScreenProps) {
-  const [activeTab, setActiveTab] = useState<number | null>(0)
+function ProfileImage({ src, alt, size = "md" }: { src?: string | null; alt: string; size?: "sm" | "md" | "lg" }) {
+  const [imgError, setImgError] = useState(false)
+  const [loaded, setLoaded] = useState(false)
+
+  const sizeClasses = {
+    sm: "w-10 h-10",
+    md: "w-16 h-16",
+    lg: "w-20 h-20",
+  }
+
+  const initials = alt?.slice(0, 2).toUpperCase() || "FC"
+
+  if (!src || imgError) {
+    return (
+      <div
+        className={`${sizeClasses[size]} rounded-full flex items-center justify-center text-white font-semibold`}
+        style={{
+          background: "oklch(0.55 0.2 250)",
+          boxShadow: "0 0 0 4px oklch(0.7 0.15 250 / 0.3)",
+        }}
+      >
+        {initials}
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className={`${sizeClasses[size]} rounded-full overflow-hidden relative`}
+      style={{ boxShadow: "0 0 0 4px oklch(0.7 0.15 250 / 0.3)" }}
+    >
+      {!loaded && <div className="absolute inset-0 bg-secondary animate-pulse" />}
+      <img
+        src={src || "/placeholder.svg"}
+        alt={alt}
+        className={`w-full h-full object-cover transition-opacity ${loaded ? "opacity-100" : "opacity-0"}`}
+        onError={() => setImgError(true)}
+        onLoad={() => setLoaded(true)}
+        crossOrigin="anonymous"
+        referrerPolicy="no-referrer"
+      />
+    </div>
+  )
+}
+
+export function DashboardScreen({ farcasterUsername, onNavigate }: DashboardScreenProps) {
+  const [activeTab, setActiveTab] = useState("dashboard")
 
   const {
     data: farcasterData,
     isLoading: farcasterLoading,
     refresh: refreshFarcaster,
   } = useFarcasterData(farcasterUsername || null)
-  const { data: walletData, isLoading: walletLoading, refresh: refreshWallet } = useWalletData(walletAddress || null)
-  const { data: nftData, isLoading: nftLoading, refresh: refreshNFTs } = useNFTData(walletAddress || null)
-
-  console.log("[v0] Farcaster data:", farcasterData)
-  console.log("[v0] User pfp_url:", farcasterData?.user?.pfp_url)
-
-  const tabs = [
-    { title: "Social", icon: MessageSquare },
-    { title: "Wallet", icon: Wallet },
-    { type: "separator" as const },
-    { title: "Guide", icon: Lightbulb },
-    { title: "Stats", icon: BarChart3 },
-    { title: "Settings", icon: Settings },
-  ]
-
-  const handleTabChange = (index: number | null) => {
-    setActiveTab(index)
-    if (index === 3) onNavigate("guide")
-    else if (index === 4) onNavigate("stats")
-    else if (index === 5) onNavigate("settings")
-  }
 
   const handleRefresh = () => {
     refreshFarcaster()
-    refreshWallet()
-    refreshNFTs()
   }
 
   return (
-    <div className="min-h-screen bg-secondary/30">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-              <Activity className="w-5 h-5 text-primary-foreground" />
+    <div className="min-h-screen" style={{ background: "linear-gradient(145deg, #f0f0f3 0%, #e6e6ea 100%)" }}>
+      <header
+        className="sticky top-0 z-50 px-4 py-4"
+        style={{ background: "linear-gradient(145deg, #f0f0f3, #e6e6ea)" }}
+      >
+        <div className="max-w-5xl mx-auto">
+          <div className="glass-card px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ background: "oklch(0.55 0.2 250)" }}
+              >
+                <Activity className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-base font-semibold">Activity Tracker</span>
             </div>
-            <span className="text-lg font-semibold">Activity Tracker</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={handleRefresh} className="rounded-xl">
-              <RefreshCw
-                className={`w-4 h-4 ${farcasterLoading || walletLoading || nftLoading ? "animate-spin" : ""}`}
+
+            <div className="pill-nav">
+              {[
+                { id: "dashboard", label: "Dashboard" },
+                { id: "guide", label: "Guide" },
+                { id: "stats", label: "Stats" },
+                { id: "settings", label: "Settings" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => (tab.id === "dashboard" ? setActiveTab(tab.id) : onNavigate(tab.id))}
+                  className={`pill-nav-item ${activeTab === tab.id ? "active" : ""}`}
+                  style={{
+                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleRefresh}
+                className="rounded-full w-10 h-10"
+                style={{ background: "rgba(255,255,255,0.5)" }}
+              >
+                <RefreshCw className={`w-4 h-4 ${farcasterLoading ? "animate-spin" : ""}`} />
+              </Button>
+              <ProfileImage
+                src={farcasterData?.user?.pfp_url}
+                alt={farcasterData?.user?.display_name || farcasterUsername}
+                size="sm"
               />
-            </Button>
-            {farcasterData?.user?.pfp_url && (
-              <Avatar className="w-8 h-8">
-                <AvatarImage src={farcasterData.user.pfp_url || "/placeholder.svg"} alt={farcasterUsername} />
-                <AvatarFallback>{farcasterUsername?.slice(0, 2).toUpperCase()}</AvatarFallback>
-              </Avatar>
-            )}
-            <Badge variant="secondary" className="px-3 py-1 rounded-full">
-              @{farcasterUsername || "user"}
-            </Badge>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        {/* Title & Tabs */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight mb-6">Your Activity Overview</h1>
-          <ExpandableTabs
-            tabs={tabs}
-            selected={activeTab}
-            onChange={handleTabChange}
-            activeColor="text-chart-2"
-            className="w-fit"
-          />
-        </div>
+      <main className="max-w-5xl mx-auto px-4 py-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+          <h1 className="text-2xl font-semibold" style={{ color: "oklch(0.55 0.2 250)" }}>
+            Good Morning, {farcasterData?.user?.display_name || farcasterUsername}!
+          </h1>
+        </motion.div>
 
-        {/* Content Grid */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Social Activity Section */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-            <Card className="rounded-2xl border-border/50 h-full">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <MessageSquare className="w-5 h-5 text-chart-2" />
-                  Farcaster Activity
-                  {farcasterUsername && (
-                    <Badge variant="outline" className="ml-auto font-normal">
-                      @{farcasterUsername}
-                    </Badge>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {farcasterLoading ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                      <Skeleton className="w-16 h-16 rounded-full" />
-                      <div className="space-y-2">
-                        <Skeleton className="h-5 w-32" />
-                        <Skeleton className="h-4 w-48" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <Skeleton className="h-20 rounded-xl" />
-                      <Skeleton className="h-20 rounded-xl" />
-                    </div>
-                    <div className="space-y-3">
-                      <Skeleton className="h-24 rounded-xl" />
-                      <Skeleton className="h-24 rounded-xl" />
-                    </div>
-                  </div>
-                ) : farcasterData?.user ? (
-                  <>
-                    <div className="flex items-center gap-4 p-4 bg-secondary/50 rounded-xl">
-                      <Avatar className="w-16 h-16 border-2 border-chart-2/20">
-                        <AvatarImage
-                          src={farcasterData.user.pfp_url || "/placeholder.svg"}
-                          alt={farcasterData.user.display_name}
-                        />
-                        <AvatarFallback className="text-lg">
-                          {farcasterData.user.display_name?.slice(0, 2).toUpperCase() || "FC"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg truncate">{farcasterData.user.display_name}</h3>
-                        <p className="text-sm text-muted-foreground">@{farcasterData.user.username}</p>
-                        {farcasterData.user.bio && (
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{farcasterData.user.bio}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Stats Row */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-secondary/50 rounded-xl p-4">
-                        <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                          <Users className="w-4 h-4" />
-                          <span className="text-xs">Followers</span>
-                        </div>
-                        <p className="text-2xl font-semibold">
-                          {farcasterData.user.follower_count?.toLocaleString() || 0}
-                        </p>
-                      </div>
-                      <div className="bg-secondary/50 rounded-xl p-4">
-                        <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                          <Users className="w-4 h-4" />
-                          <span className="text-xs">Following</span>
-                        </div>
-                        <p className="text-2xl font-semibold">
-                          {farcasterData.user.following_count?.toLocaleString() || 0}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Engagement Stats */}
-                    <div className="flex gap-6">
-                      <div className="flex items-center gap-2">
-                        <Heart className="w-4 h-4 text-rose-500" />
-                        <span className="text-sm text-muted-foreground">
-                          {farcasterData.totalLikes?.toLocaleString() || 0} recent likes
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MessageCircle className="w-4 h-4 text-chart-2" />
-                        <span className="text-sm text-muted-foreground">
-                          {farcasterData.totalComments?.toLocaleString() || 0} comments
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Recent Posts */}
-                    <div>
-                      <h4 className="text-sm font-medium mb-3">Recent Casts</h4>
-                      <div className="space-y-3">
-                        {farcasterData.casts?.slice(0, 3).map((cast) => (
-                          <div
-                            key={cast.hash}
-                            className="bg-secondary/30 rounded-xl p-4 hover:bg-secondary/50 transition-colors cursor-pointer"
-                          >
-                            <p className="text-sm mb-2 line-clamp-2">{cast.text}</p>
-                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                <Heart className="w-3 h-3" /> {cast.reactions?.likes_count || 0}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <MessageCircle className="w-3 h-3" /> {cast.replies?.count || 0}
-                              </span>
-                              <span className="ml-auto">{formatRelativeTime(cast.timestamp)}</span>
-                            </div>
-                          </div>
-                        ))}
-                        {(!farcasterData.casts || farcasterData.casts.length === 0) && (
-                          <p className="text-sm text-muted-foreground text-center py-4">No recent casts found</p>
-                        )}
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    {farcasterUsername ? (
-                      <p>User not found. Please check the username.</p>
-                    ) : (
-                      <p>Enter a Farcaster username to see activity</p>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Wallet Activity Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Profile Card - Like reference image 4 */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
+            transition={{ delay: 0.1 }}
+            className="gradient-card gradient-card-cyan p-6"
           >
-            <Card className="rounded-2xl border-border/50 h-full">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Wallet className="w-5 h-5 text-chart-1" />
-                  Base Wallet Activity
-                  {walletAddress && (
-                    <Badge variant="outline" className="ml-auto font-mono text-xs font-normal">
-                      {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
-                    </Badge>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {walletLoading ? (
-                  <div className="space-y-4">
-                    <Skeleton className="h-28 rounded-xl" />
-                    <div className="space-y-2">
-                      <Skeleton className="h-14 rounded-xl" />
-                      <Skeleton className="h-14 rounded-xl" />
-                      <Skeleton className="h-14 rounded-xl" />
+            {farcasterLoading ? (
+              <div className="space-y-4">
+                <Skeleton className="w-20 h-20 rounded-full" />
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-4 w-48" />
+              </div>
+            ) : farcasterData?.user ? (
+              <>
+                <div className="flex justify-end mb-2">
+                  <button className="text-muted-foreground hover:text-foreground">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                      <polyline points="16 6 12 2 8 6" />
+                      <line x1="12" y1="2" x2="12" y2="15" />
+                    </svg>
+                  </button>
+                </div>
+                <ProfileImage
+                  src={farcasterData.user.pfp_url}
+                  alt={farcasterData.user.display_name || farcasterUsername}
+                  size="lg"
+                />
+                <h3 className="font-semibold text-xl mt-4">{farcasterData.user.display_name}</h3>
+                <p className="text-sm text-muted-foreground">@{farcasterData.user.username}</p>
+
+                {/* Tags like profile card reference */}
+                <div className="flex gap-2 mt-3">
+                  <span className="px-3 py-1 rounded-full text-xs bg-white/60 text-muted-foreground">Farcaster</span>
+                  <span className="px-3 py-1 rounded-full text-xs bg-white/60 text-muted-foreground">Base</span>
+                </div>
+
+                {/* Stats row like profile card reference */}
+                <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/30">
+                  <div className="text-center">
+                    <div className="flex items-center gap-1 justify-center">
+                      <Star className="w-4 h-4" style={{ color: "oklch(0.55 0.2 250)" }} />
+                      <span className="font-semibold">
+                        {((farcasterData.totalLikes || 0) / Math.max(farcasterData.casts?.length || 1, 1)).toFixed(1)}
+                      </span>
                     </div>
+                    <p className="text-xs text-muted-foreground">Avg Likes</p>
                   </div>
-                ) : walletData?.balance ? (
-                  <>
-                    {/* Balance */}
-                    <div className="bg-gradient-to-br from-chart-1/10 to-chart-2/10 rounded-xl p-6">
-                      <p className="text-sm text-muted-foreground mb-1">Current Balance</p>
-                      <p className="text-3xl font-semibold">{walletData.balance.balanceEth}</p>
-                      <p className="text-sm text-muted-foreground mt-1">{walletData.balance.balanceUsd}</p>
-                    </div>
-
-                    <div>
-                      <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-                        <ImageIcon className="w-4 h-4" />
-                        NFT Collection
-                      </h4>
-                      {nftLoading ? (
-                        <div className="grid grid-cols-3 gap-2">
-                          {[...Array(6)].map((_, i) => (
-                            <Skeleton key={i} className="aspect-square rounded-xl" />
-                          ))}
-                        </div>
-                      ) : nftData?.nfts && nftData.nfts.length > 0 ? (
-                        <div className="grid grid-cols-3 gap-2">
-                          {nftData.nfts.slice(0, 6).map((nft, idx) => (
-                            <a
-                              key={`${nft.contract}-${nft.identifier}-${idx}`}
-                              href={nft.opensea_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="aspect-square rounded-xl overflow-hidden bg-secondary/50 hover:ring-2 hover:ring-chart-1/50 transition-all group relative"
-                            >
-                              {nft.image_url ? (
-                                <img
-                                  src={nft.image_url || "/placeholder.svg"}
-                                  alt={nft.name || `NFT #${nft.identifier}`}
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                                  <ImageIcon className="w-6 h-6" />
-                                </div>
-                              )}
-                              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <p className="text-[10px] text-white truncate">{nft.name || `#${nft.identifier}`}</p>
-                              </div>
-                            </a>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="bg-secondary/30 rounded-xl p-4 text-center">
-                          <ImageIcon className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                          <p className="text-sm text-muted-foreground">No NFTs found on Base</p>
-                        </div>
-                      )}
-                      {nftData?.nfts && nftData.nfts.length > 6 && (
-                        <p className="text-xs text-muted-foreground text-center mt-2">
-                          +{nftData.nfts.length - 6} more NFTs
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Token Holdings */}
-                    {walletData.tokens && walletData.tokens.length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-                          <Coins className="w-4 h-4" />
-                          Token Holdings
-                        </h4>
-                        <div className="grid grid-cols-2 gap-2">
-                          {walletData.tokens.slice(0, 4).map((token, idx) => (
-                            <div key={idx} className="bg-secondary/30 rounded-xl p-3">
-                              <p className="text-sm font-medium truncate">{token.symbol}</p>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {Number(token.balance).toLocaleString(undefined, { maximumFractionDigits: 4 })}
-                              </p>
-                              {token.balanceUsd && <p className="text-xs text-muted-foreground">{token.balanceUsd}</p>}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Recent Transactions */}
-                    <div>
-                      <h4 className="text-sm font-medium mb-3">Recent Transactions</h4>
-                      <div className="space-y-2">
-                        {walletData.transactions?.slice(0, 4).map((tx) => (
-                          <a
-                            key={tx.hash}
-                            href={`https://basescan.org/tx/${tx.hash}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-3 bg-secondary/30 rounded-xl p-3 hover:bg-secondary/50 transition-colors cursor-pointer"
-                          >
-                            <div
-                              className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                tx.isReceive ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500"
-                              }`}
-                            >
-                              {tx.isReceive ? (
-                                <ArrowDownLeft className="w-4 h-4" />
-                              ) : (
-                                <ArrowUpRight className="w-4 h-4" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-mono text-sm truncate">
-                                {tx.hash.slice(0, 10)}...{tx.hash.slice(-6)}
-                              </p>
-                              <p className="text-xs text-muted-foreground">{formatRelativeTime(tx.timeStamp)}</p>
-                            </div>
-                            <p className={`text-sm font-medium ${tx.isReceive ? "text-emerald-500" : "text-rose-500"}`}>
-                              {tx.isReceive ? "+" : "-"}
-                              {tx.valueEth} ETH
-                            </p>
-                          </a>
-                        ))}
-                        {(!walletData.transactions || walletData.transactions.length === 0) && (
-                          <p className="text-sm text-muted-foreground text-center py-4">No transactions found</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <Button
-                      variant="outline"
-                      className="w-full rounded-xl bg-transparent"
-                      onClick={() => window.open(`https://basescan.org/address/${walletAddress}`, "_blank")}
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      View on Basescan
-                    </Button>
-                  </>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    {walletAddress ? (
-                      <p>Unable to load wallet data. Please check the address.</p>
-                    ) : (
-                      <p>Enter a wallet address to see activity</p>
-                    )}
+                  <div className="text-center border-l border-r border-white/30 px-4">
+                    <span className="font-semibold">{farcasterData.user.follower_count?.toLocaleString()}</span>
+                    <p className="text-xs text-muted-foreground">Followers</p>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
-
-        {/* Quick Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="mt-6"
-        >
-          <Card className="rounded-2xl border-border/50">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-chart-4/10 flex items-center justify-center">
-                    <TrendingUp className="w-5 h-5 text-chart-4" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Activity Score: {farcasterData?.user ? "Good" : "N/A"}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {farcasterData?.user ? "Keep up the engagement!" : "Connect your accounts to see your score"}
-                    </p>
+                  <div className="text-center">
+                    <span className="font-semibold">{farcasterData.user.following_count?.toLocaleString()}</span>
+                    <p className="text-xs text-muted-foreground">Following</p>
                   </div>
                 </div>
-                <Button onClick={() => onNavigate("guide")} className="rounded-xl">
-                  View Improvement Tips
-                  <ArrowUpRight className="w-4 h-4 ml-2" />
-                </Button>
+
+                {/* CTA button like profile card */}
+                <div className="flex gap-2 mt-4">
+                  <button
+                    className="flex-1 py-3 rounded-full text-sm font-medium"
+                    style={{
+                      background: "rgba(255,255,255,0.6)",
+                      boxShadow: "2px 2px 6px rgba(0,0,0,0.05), -2px -2px 6px rgba(255,255,255,0.8)",
+                    }}
+                  >
+                    View Profile
+                  </button>
+                  <button
+                    className="w-12 h-12 rounded-full flex items-center justify-center bg-white"
+                    style={{ boxShadow: "2px 2px 6px rgba(0,0,0,0.05)" }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+                    </svg>
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>Enter a username to see profile</p>
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+            )}
+          </motion.div>
+
+          {/* Engagement Chart - Like Youcare Health Trend */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="glass-card p-6"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-medium">Engagement Rate</h3>
+              <span
+                className="text-xs px-2 py-1 rounded-full"
+                style={{ background: "oklch(0.55 0.2 250 / 0.1)", color: "oklch(0.55 0.2 250)" }}
+              >
+                +0.75%
+              </span>
+            </div>
+            <div className="flex items-baseline gap-2 mb-4">
+              <span className="text-4xl font-bold">
+                {Math.min(
+                  ((farcasterData?.totalLikes || 0) / Math.max(farcasterData?.casts?.length || 1, 1)) * 10,
+                  100,
+                ).toFixed(0)}
+                %
+              </span>
+            </div>
+            {/* Simple bar chart like Youcare */}
+            <div className="flex items-end gap-1 h-20">
+              {["Mon", "Tue", "Wed", "Thu"].map((day, i) => (
+                <div key={day} className="flex-1 flex flex-col items-center gap-1">
+                  <div
+                    className="w-full rounded-t-lg"
+                    style={{
+                      height: `${30 + Math.random() * 50}%`,
+                      background: "oklch(0.55 0.2 250 / 0.7)",
+                    }}
+                  />
+                  <span className="text-xs text-muted-foreground">{day}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Activity Progress - Like Retainable */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="glass-card p-6"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-medium">Activity Progress</h3>
+              <span className="text-xs text-muted-foreground">...</span>
+            </div>
+            {/* Timeline items like Retainable checkup progress */}
+            <div className="space-y-4">
+              {[
+                { date: "Today", label: "Posted 3 casts", done: true },
+                { date: "Yesterday", label: "10+ engagements", done: true },
+              ].map((item, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ background: "oklch(0.55 0.2 250 / 0.1)" }}
+                  >
+                    <MessageSquare className="w-5 h-5" style={{ color: "oklch(0.55 0.2 250)" }} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium" style={{ color: "oklch(0.55 0.2 250)" }}>
+                      {item.date}
+                    </p>
+                    <div className="progress-bar-container mt-1.5">
+                      <div className="progress-bar-fill" style={{ width: item.done ? "100%" : "60%" }} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Recent Casts - Like Retainable task status */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="gradient-card gradient-card-peach p-6 md:col-span-2"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-medium">Recent Casts</h3>
+              <button
+                className="text-xs px-3 py-1.5 rounded-full font-medium"
+                style={{
+                  background: "oklch(0.55 0.2 250)",
+                  color: "white",
+                }}
+              >
+                See Details
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {farcasterLoading ? (
+                <>
+                  <Skeleton className="h-16 rounded-2xl" />
+                  <Skeleton className="h-16 rounded-2xl" />
+                </>
+              ) : (
+                farcasterData?.casts?.slice(0, 3).map((cast) => (
+                  <div key={cast.hash} className="task-card">
+                    <p className="text-sm line-clamp-1 mb-2">{cast.text}</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Heart className="w-3 h-3 text-rose-500" /> {cast.reactions?.likes_count || 0}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MessageCircle className="w-3 h-3" style={{ color: "oklch(0.55 0.2 250)" }} />{" "}
+                          {cast.replies?.count || 0}
+                        </span>
+                      </div>
+                      {/* Status indicator like hexagon AI */}
+                      <div className="status-indicator">
+                        <span className="text-muted-foreground">{formatRelativeTime(cast.timestamp)}</span>
+                        <span className={`status-dot ${(cast.reactions?.likes_count || 0) > 5 ? "done" : "working"}`} />
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </motion.div>
+
+          {/* Stats Summary */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="glass-card p-6"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-medium">Total Engagement</h3>
+              <button className="text-xs text-muted-foreground">See Details</button>
+            </div>
+            <div className="space-y-3">
+              <div
+                className="flex items-center justify-between p-3 rounded-xl"
+                style={{ background: "rgba(255,255,255,0.5)" }}
+              >
+                <div className="flex items-center gap-2">
+                  <Heart className="w-4 h-4 text-rose-500" />
+                  <span className="text-sm">Total Likes</span>
+                </div>
+                <span className="font-semibold">{farcasterData?.totalLikes?.toLocaleString() || 0}</span>
+              </div>
+              <div
+                className="flex items-center justify-between p-3 rounded-xl"
+                style={{ background: "rgba(255,255,255,0.5)" }}
+              >
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="w-4 h-4" style={{ color: "oklch(0.55 0.2 250)" }} />
+                  <span className="text-sm">Comments</span>
+                </div>
+                <span className="font-semibold">{farcasterData?.totalComments?.toLocaleString() || 0}</span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       </main>
     </div>
   )

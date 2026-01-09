@@ -1,22 +1,10 @@
 "use client"
 
 import { motion } from "framer-motion"
-import {
-  Activity,
-  ArrowLeft,
-  MessageSquare,
-  Wallet,
-  Target,
-  CheckCircle2,
-  Circle,
-  Sparkles,
-  TrendingUp,
-} from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Activity, ArrowLeft, Target, CheckCircle2, Circle, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useFarcasterData, useWalletData } from "@/hooks/use-activity-data"
+import { useFarcasterData } from "@/hooks/use-activity-data"
 
 interface GuideScreenProps {
   farcasterUsername: string
@@ -24,247 +12,189 @@ interface GuideScreenProps {
   onBack: () => void
 }
 
-export function GuideScreen({ farcasterUsername, walletAddress, onBack }: GuideScreenProps) {
-  const { data: farcasterData, isLoading: farcasterLoading } = useFarcasterData(farcasterUsername || null)
-  const { data: walletData, isLoading: walletLoading } = useWalletData(walletAddress || null)
+export function GuideScreen({ farcasterUsername, onBack }: GuideScreenProps) {
+  const { data: farcasterData, isLoading } = useFarcasterData(farcasterUsername || null)
 
-  const isLoading = farcasterLoading || walletLoading
-
-  // Calculate goals from real data
   const postsThisWeek = farcasterData?.casts?.length || 0
   const likesGiven = farcasterData?.totalLikes || 0
   const commentsCount = farcasterData?.totalComments || 0
-  const transactionsCount = walletData?.transactions?.length || 0
+  const followersCount = farcasterData?.user?.follower_count || 0
 
   const socialGoals = [
-    { label: "Posts this week", current: Math.min(postsThisWeek, 3), target: 3, completed: postsThisWeek >= 3 },
+    { label: "Posts this day", current: Math.min(postsThisWeek, 3), target: 3, completed: postsThisWeek >= 3 },
     { label: "Total engagement", current: Math.min(likesGiven, 50), target: 50, completed: likesGiven >= 50 },
     { label: "Comments received", current: Math.min(commentsCount, 10), target: 10, completed: commentsCount >= 10 },
-  ]
-
-  const walletGoals = [
     {
-      label: "Transactions this month",
-      current: Math.min(transactionsCount, 5),
-      target: 5,
-      completed: transactionsCount >= 5,
-    },
-    {
-      label: "Active wallet usage",
-      current: transactionsCount > 0 ? 1 : 0,
-      target: 1,
-      completed: transactionsCount > 0,
+      label: "Follower milestone",
+      current: Math.min(followersCount, 100),
+      target: 100,
+      completed: followersCount >= 100,
     },
   ]
 
   return (
-    <div className="min-h-screen bg-secondary/30">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={onBack} className="rounded-xl">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-              <Activity className="w-5 h-5 text-primary-foreground" />
+    <div className="min-h-screen" style={{ background: "linear-gradient(145deg, #f0f0f3 0%, #e6e6ea 100%)" }}>
+      <header
+        className="sticky top-0 z-50 px-4 py-4"
+        style={{ background: "linear-gradient(145deg, #f0f0f3, #e6e6ea)" }}
+      >
+        <div className="max-w-4xl mx-auto">
+          <div className="glass-card px-4 py-3 flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full">
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ background: "oklch(0.55 0.2 250)" }}
+              >
+                <Activity className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-base font-semibold">Activity Guide</span>
             </div>
-            <span className="text-lg font-semibold">Activity Tracker</span>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-          <div className="mb-8">
-            <h1 className="text-3xl font-semibold tracking-tight mb-2">Your Activity Improvement Guide</h1>
-            <p className="text-muted-foreground">
-              Personalized tips and goals to help you stay engaged and grow your presence.
-            </p>
+      <main className="max-w-4xl mx-auto px-4 py-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="mb-6">
+            <h1 className="text-2xl font-semibold" style={{ color: "oklch(0.55 0.2 250)" }}>
+              Improve Your Activity
+            </h1>
+            <p className="text-muted-foreground text-sm mt-1">Personalized tips to grow your Farcaster presence.</p>
           </div>
 
-          <div className="grid gap-6">
-            {/* Social Activity Guide */}
-            <Card className="rounded-2xl border-border/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5 text-chart-2" />
-                  Social Activity Guide
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {isLoading ? (
-                  <div className="space-y-4">
-                    <Skeleton className="h-16 rounded-xl" />
-                    <Skeleton className="h-12 rounded-xl" />
-                    <Skeleton className="h-12 rounded-xl" />
-                  </div>
-                ) : (
-                  <>
-                    {/* Status Message - Dynamic based on real data */}
-                    <div
-                      className={`${postsThisWeek >= 3 ? "bg-emerald-500/10 border-emerald-500/20" : "bg-amber-500/10 border-amber-500/20"} border rounded-xl p-4`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <Sparkles
-                          className={`w-5 h-5 ${postsThisWeek >= 3 ? "text-emerald-500" : "text-amber-500"} mt-0.5`}
-                        />
-                        <div>
-                          <p
-                            className={`font-medium ${postsThisWeek >= 3 ? "text-emerald-700 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400"}`}
-                          >
-                            {postsThisWeek >= 3
-                              ? `Great job! You've posted ${postsThisWeek} times recently. Keep it up!`
-                              : `You've posted ${postsThisWeek} time${postsThisWeek !== 1 ? "s" : ""} recently. Let's aim for 3 posts!`}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Goals */}
-                    <div className="space-y-4">
-                      {socialGoals.map((goal, index) => (
-                        <div key={index} className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              {goal.completed ? (
-                                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                              ) : (
-                                <Circle className="w-4 h-4 text-muted-foreground" />
-                              )}
-                              <span className="text-sm font-medium">{goal.label}</span>
-                            </div>
-                            <span className="text-sm text-muted-foreground">
-                              {goal.current}/{goal.target}
-                            </span>
-                          </div>
-                          <Progress value={(goal.current / goal.target) * 100} className="h-2" />
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Tips */}
-                    <div className="space-y-3">
-                      <h4 className="text-sm font-medium">Suggestions</h4>
-                      <ul className="space-y-2">
-                        <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <TrendingUp className="w-4 h-4 text-chart-2 mt-0.5 shrink-0" />
-                          Post more often to stay visible in your followers&apos; feeds.
-                        </li>
-                        <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <TrendingUp className="w-4 h-4 text-chart-2 mt-0.5 shrink-0" />
-                          Engage with others by liking and commenting on posts.
-                        </li>
-                        <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <TrendingUp className="w-4 h-4 text-chart-2 mt-0.5 shrink-0" />
-                          Reply to comments on your posts to boost engagement.
-                        </li>
-                      </ul>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Wallet Activity Guide */}
-            <Card className="rounded-2xl border-border/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Wallet className="w-5 h-5 text-chart-1" />
-                  Wallet Activity Guide
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {isLoading ? (
-                  <div className="space-y-4">
-                    <Skeleton className="h-16 rounded-xl" />
-                    <Skeleton className="h-12 rounded-xl" />
-                    <Skeleton className="h-12 rounded-xl" />
-                  </div>
-                ) : (
-                  <>
-                    {/* Status Message - Dynamic based on real data */}
-                    <div
-                      className={`${transactionsCount >= 5 ? "bg-emerald-500/10 border-emerald-500/20" : "bg-chart-2/10 border-chart-2/20"} border rounded-xl p-4`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <Sparkles
-                          className={`w-5 h-5 ${transactionsCount >= 5 ? "text-emerald-500" : "text-chart-2"} mt-0.5`}
-                        />
-                        <div>
-                          <p
-                            className={`font-medium ${transactionsCount >= 5 ? "text-emerald-700 dark:text-emerald-400" : "text-teal-700 dark:text-teal-400"}`}
-                          >
-                            {transactionsCount >= 5
-                              ? `Excellent! You've made ${transactionsCount} transactions. You're very active!`
-                              : `You've made ${transactionsCount} transaction${transactionsCount !== 1 ? "s" : ""} recently. Let's aim for 5!`}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Goals */}
-                    <div className="space-y-4">
-                      {walletGoals.map((goal, index) => (
-                        <div key={index} className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              {goal.completed ? (
-                                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                              ) : (
-                                <Circle className="w-4 h-4 text-muted-foreground" />
-                              )}
-                              <span className="text-sm font-medium">{goal.label}</span>
-                            </div>
-                            <span className="text-sm text-muted-foreground">
-                              {goal.current}/{goal.target}
-                            </span>
-                          </div>
-                          <Progress value={(goal.current / goal.target) * 100} className="h-2" />
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Tips */}
-                    <div className="space-y-3">
-                      <h4 className="text-sm font-medium">Suggestions</h4>
-                      <ul className="space-y-2">
-                        <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <TrendingUp className="w-4 h-4 text-chart-1 mt-0.5 shrink-0" />
-                          Try transferring a small amount of crypto to stay active.
-                        </li>
-                        <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <TrendingUp className="w-4 h-4 text-chart-1 mt-0.5 shrink-0" />
-                          Explore NFT collections on Base to discover new projects.
-                        </li>
-                        <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <TrendingUp className="w-4 h-4 text-chart-1 mt-0.5 shrink-0" />
-                          Set up wallet alerts to monitor your balance and transactions.
-                        </li>
-                      </ul>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Set Goals CTA */}
-            <Card className="rounded-2xl border-border/50 bg-gradient-to-br from-chart-2/5 to-chart-1/5">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <Target className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Ready to level up?</p>
-                      <p className="text-sm text-muted-foreground">Set personalized goals for the upcoming week.</p>
-                    </div>
-                  </div>
-                  <Button className="rounded-xl">Set Goals</Button>
+          <div className="grid gap-4">
+            {/* Status Card - Like Hexagon AI status */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className={`gradient-card p-6 ${postsThisWeek >= 3 ? "gradient-card-cyan" : "gradient-card-peach"}`}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                  style={{ background: postsThisWeek >= 3 ? "oklch(0.6 0.15 160)" : "oklch(0.7 0.15 60)" }}
+                >
+                  {postsThisWeek >= 3 ? (
+                    <CheckCircle2 className="w-6 h-6 text-white" />
+                  ) : (
+                    <Circle className="w-6 h-6 text-white" />
+                  )}
                 </div>
-              </CardContent>
-            </Card>
+                <div className="flex-1">
+                  <p className="font-medium">
+                    {postsThisWeek >= 3
+                      ? `Great job! You've posted ${postsThisWeek} times recently.`
+                      : `You've posted ${postsThisWeek} time${postsThisWeek !== 1 ? "s" : ""} recently. Let's aim for 3!`}
+                  </p>
+                </div>
+                {/* Status indicator like Hexagon AI */}
+                <div className="status-indicator">
+                  <span className="text-sm">{postsThisWeek >= 3 ? "Done" : "Working..."}</span>
+                  <span className={`status-dot ${postsThisWeek >= 3 ? "done" : "working"}`} />
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Goals - Like Retainable task status */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="glass-card p-6"
+            >
+              <h3 className="font-medium mb-4">Your Goals</h3>
+              {isLoading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-16 rounded-2xl" />
+                  <Skeleton className="h-16 rounded-2xl" />
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {socialGoals.map((goal, index) => (
+                    <div key={index} className="task-card">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          {goal.completed ? (
+                            <CheckCircle2 className="w-5 h-5" style={{ color: "oklch(0.6 0.15 160)" }} />
+                          ) : (
+                            <Circle className="w-5 h-5 text-muted-foreground" />
+                          )}
+                          <span className="text-sm font-medium">{goal.label}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground font-mono">
+                          {goal.current}/{goal.target}
+                        </span>
+                      </div>
+                      <div className="progress-bar-container">
+                        <div
+                          className="progress-bar-fill"
+                          style={{ width: `${(goal.current / goal.target) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+
+            {/* Tips */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="glass-card p-6"
+            >
+              <h3 className="font-medium mb-4">Suggestions</h3>
+              <div className="space-y-2">
+                {[
+                  "Post more often to stay visible in your followers' feeds.",
+                  "Engage with others by liking and commenting on posts.",
+                  "Reply to comments on your posts to boost engagement.",
+                  "Share interesting content to attract new followers.",
+                ].map((tip, i) => (
+                  <div key={i} className="task-card flex items-start gap-3">
+                    <TrendingUp className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "oklch(0.55 0.2 250)" }} />
+                    <span className="text-sm text-muted-foreground">{tip}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* CTA - Like profile card button */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="gradient-card gradient-card-purple p-6"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                    style={{ background: "oklch(0.55 0.2 250)" }}
+                  >
+                    <Target className="w-7 h-7 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-lg">Ready to level up?</p>
+                    <p className="text-sm text-muted-foreground">Set personalized goals for the week.</p>
+                  </div>
+                </div>
+                <button
+                  className="px-6 py-3 rounded-full text-sm font-medium text-white"
+                  style={{
+                    background: "oklch(0.55 0.2 250)",
+                    boxShadow: "0 4px 16px oklch(0.55 0.2 250 / 0.3)",
+                  }}
+                >
+                  Set Goals
+                </button>
+              </div>
+            </motion.div>
           </div>
         </motion.div>
       </main>

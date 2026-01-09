@@ -2,11 +2,9 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Activity, ArrowLeft, Bell, LogOut, User, Wallet, Save } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Activity, ArrowLeft, Bell, LogOut, User, Save, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 
 interface SettingsScreenProps {
@@ -17,119 +15,139 @@ interface SettingsScreenProps {
   onLogout: () => void
 }
 
-export function SettingsScreen({ farcasterUsername, walletAddress, onBack, onUpdate, onLogout }: SettingsScreenProps) {
+export function SettingsScreen({ farcasterUsername, onBack, onUpdate, onLogout }: SettingsScreenProps) {
   const [username, setUsername] = useState(farcasterUsername)
-  const [wallet, setWallet] = useState(walletAddress)
   const [reminders, setReminders] = useState(true)
   const [notifications, setNotifications] = useState(true)
 
   const handleSave = () => {
-    onUpdate({ farcasterUsername: username, walletAddress: wallet })
+    onUpdate({ farcasterUsername: username, walletAddress: "" })
   }
 
   return (
-    <div className="min-h-screen bg-secondary/30">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={onBack} className="rounded-xl">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-              <Activity className="w-5 h-5 text-primary-foreground" />
+    <div className="min-h-screen" style={{ background: "linear-gradient(145deg, #f0f0f3 0%, #e6e6ea 100%)" }}>
+      <header
+        className="sticky top-0 z-50 px-4 py-4"
+        style={{ background: "linear-gradient(145deg, #f0f0f3, #e6e6ea)" }}
+      >
+        <div className="max-w-2xl mx-auto">
+          <div className="glass-card px-4 py-3 flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full">
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ background: "oklch(0.55 0.2 250)" }}
+              >
+                <Activity className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-base font-semibold">Settings</span>
             </div>
-            <span className="text-lg font-semibold">Activity Tracker</span>
           </div>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-8">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-          <div className="mb-8">
-            <h1 className="text-3xl font-semibold tracking-tight mb-2">Settings</h1>
-            <p className="text-muted-foreground">Customize your preferences and notification settings.</p>
-          </div>
-
-          <div className="space-y-6">
+      <main className="max-w-2xl mx-auto px-4 py-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="space-y-4">
             {/* Account Settings */}
-            <Card className="rounded-2xl border-border/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="w-5 h-5" />
-                  Account Settings
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="settings-username">Farcaster Username</Label>
-                  <Input
-                    id="settings-username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="e.g., vitalik"
-                    className="rounded-xl"
-                  />
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="glass-card p-6"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ background: "oklch(0.55 0.2 250 / 0.1)" }}
+                >
+                  <User className="w-4 h-4" style={{ color: "oklch(0.55 0.2 250)" }} />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="settings-wallet">Base Wallet Address</Label>
-                  <div className="flex items-center gap-2">
-                    <Wallet className="w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="settings-wallet"
-                      value={wallet}
-                      onChange={(e) => setWallet(e.target.value)}
-                      placeholder="0x..."
-                      className="rounded-xl font-mono text-sm"
-                    />
-                  </div>
-                </div>
-                <Button onClick={handleSave} className="rounded-xl">
-                  <Save className="w-4 h-4 mr-2" />
-                  Save Changes
-                </Button>
-              </CardContent>
-            </Card>
+                <h3 className="font-medium">Account Settings</h3>
+              </div>
+
+              <div className="task-card mb-4">
+                <label className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                  <MessageSquare className="w-3.5 h-3.5" style={{ color: "oklch(0.55 0.2 250)" }} />
+                  Farcaster Username
+                </label>
+                <Input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="e.g., vitalik"
+                  className="h-11 rounded-xl bg-white/50 border-white/60"
+                />
+              </div>
+
+              <button
+                onClick={handleSave}
+                className="w-full py-3 rounded-full text-sm font-medium text-white flex items-center justify-center gap-2"
+                style={{
+                  background: "oklch(0.55 0.2 250)",
+                  boxShadow: "0 4px 16px oklch(0.55 0.2 250 / 0.3)",
+                }}
+              >
+                <Save className="w-4 h-4" />
+                Save Changes
+              </button>
+            </motion.div>
 
             {/* Notification Settings */}
-            <Card className="rounded-2xl border-border/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Bell className="w-5 h-5" />
-                  Notifications
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="reminders">Activity Reminders</Label>
-                    <p className="text-sm text-muted-foreground">Get reminders to engage more frequently</p>
-                  </div>
-                  <Switch id="reminders" checked={reminders} onCheckedChange={setReminders} />
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="glass-card p-6"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ background: "oklch(0.55 0.2 250 / 0.1)" }}
+                >
+                  <Bell className="w-4 h-4" style={{ color: "oklch(0.55 0.2 250)" }} />
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="notifications">Push Notifications</Label>
-                    <p className="text-sm text-muted-foreground">Receive activity updates and wallet alerts</p>
+                <h3 className="font-medium">Notifications</h3>
+              </div>
+
+              <div className="space-y-3">
+                <div className="task-card flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">Activity Reminders</p>
+                    <p className="text-xs text-muted-foreground">Get reminders to engage more</p>
                   </div>
-                  <Switch id="notifications" checked={notifications} onCheckedChange={setNotifications} />
+                  <Switch checked={reminders} onCheckedChange={setReminders} />
                 </div>
-              </CardContent>
-            </Card>
+                <div className="task-card flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">Push Notifications</p>
+                    <p className="text-xs text-muted-foreground">Receive activity updates</p>
+                  </div>
+                  <Switch checked={notifications} onCheckedChange={setNotifications} />
+                </div>
+              </div>
+            </motion.div>
 
             {/* Logout */}
-            <Card className="rounded-2xl border-border/50">
-              <CardContent className="p-6">
-                <Button
-                  variant="outline"
-                  onClick={onLogout}
-                  className="w-full rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10 bg-transparent"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Clear Data & Start Over
-                </Button>
-              </CardContent>
-            </Card>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="glass-card p-6"
+            >
+              <button
+                onClick={onLogout}
+                className="w-full py-3 rounded-full text-sm font-medium flex items-center justify-center gap-2 text-rose-600"
+                style={{
+                  background: "rgba(255,255,255,0.6)",
+                  boxShadow: "2px 2px 6px rgba(0,0,0,0.05), -2px -2px 6px rgba(255,255,255,0.8)",
+                }}
+              >
+                <LogOut className="w-4 h-4" />
+                Clear Data & Start Over
+              </button>
+            </motion.div>
           </div>
         </motion.div>
       </main>
