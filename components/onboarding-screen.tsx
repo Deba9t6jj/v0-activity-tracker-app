@@ -7,6 +7,8 @@ import { Activity, ArrowRight, HelpCircle, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useFarcasterContext } from "@/hooks/use-farcaster-context"
+import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern"
+import { cn } from "@/lib/utils"
 
 interface OnboardingScreenProps {
   onSubmit: (data: { farcasterUsername: string; walletAddress: string }) => void
@@ -31,17 +33,27 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4"
+      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
       style={{ background: "linear-gradient(145deg, #f0f0f3 0%, #e6e6ea 100%)" }}
     >
+      <AnimatedGridPattern
+        numSquares={30}
+        maxOpacity={0.1}
+        duration={3}
+        repeatDelay={1}
+        className={cn(
+          "[mask-image:radial-gradient(600px_circle_at_center,white,transparent)]",
+          "fill-[oklch(0.55_0.2_250)] stroke-[oklch(0.55_0.2_250)]",
+        )}
+      />
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md relative z-10"
       >
         <div className="soft-container">
-          {/* Logo */}
           <div className="flex items-center justify-center gap-3 mb-8">
             <motion.div
               initial={{ scale: 0.8 }}
@@ -153,7 +165,6 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
             </motion.div>
           </form>
 
-          {/* Help Link */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
