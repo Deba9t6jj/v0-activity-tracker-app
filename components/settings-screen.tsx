@@ -13,9 +13,10 @@ interface SettingsScreenProps {
   onBack: () => void
   onUpdate: (data: { farcasterUsername: string; walletAddress: string }) => void
   onLogout: () => void
+  isInFrame?: boolean
 }
 
-export function SettingsScreen({ farcasterUsername, onBack, onUpdate, onLogout }: SettingsScreenProps) {
+export function SettingsScreen({ farcasterUsername, onBack, onUpdate, onLogout, isInFrame }: SettingsScreenProps) {
   const [username, setUsername] = useState(farcasterUsername)
   const [reminders, setReminders] = useState(true)
   const [notifications, setNotifications] = useState(true)

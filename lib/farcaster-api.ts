@@ -50,7 +50,7 @@ export async function getFarcasterUser(username: string): Promise<FarcasterUser 
       return null
     }
 
-    console.log("[v0] Fetching Farcaster user:", username)
+    console.log("[v0] Fetching Farcaster user by username:", username)
 
     const response = await fetch(
       `https://api.neynar.com/v2/farcaster/user/by_username?username=${encodeURIComponent(username)}`,
@@ -70,10 +70,48 @@ export async function getFarcasterUser(username: string): Promise<FarcasterUser 
     }
 
     const data = await response.json()
-    console.log("[v0] Farcaster user data received:", JSON.stringify(data.user, null, 2))
+    console.log("[v0] Farcaster user data received by username:", JSON.stringify(data.user, null, 2))
     return data.user as FarcasterUser
   } catch (error) {
-    console.error("[v0] Error fetching Farcaster user:", error)
+    console.error("[v0] Error fetching Farcaster user by username:", error)
+    return null
+  }
+}
+
+// Get user by FID
+export async function getFarcasterUserByFid(fid: number): Promise<FarcasterUser | null> {
+  try {
+    const apiKey = getApiKey()
+    if (!apiKey) {
+      console.error("[v0] NEYNAR_API_KEY environment variable is not set")
+      return null
+    }
+
+    console.log("[v0] Fetching Farcaster user by FID:", fid)
+
+    const response = await fetch(`https://api.neynar.com/v2/farcaster/user/bulk?fids=${fid}`, {
+      headers: {
+        accept: "application/json",
+        "x-api-key": apiKey,
+      },
+      next: { revalidate: 60 },
+    })
+
+    if (!response.ok) {
+      const errorBody = await response.text()
+      console.error(`[v0] Neynar API error: ${response.status}, body: ${errorBody}`)
+      return null
+    }
+
+    const data = await response.json()
+    const user = data.users?.[0]
+    if (user) {
+      console.log("[v0] Farcaster user data received by FID:", JSON.stringify(user, null, 2))
+      return user as FarcasterUser
+    }
+    return null
+  } catch (error) {
+    console.error("[v0] Error fetching Farcaster user by FID:", error)
     return null
   }
 }
@@ -126,6 +164,33 @@ export async function getFarcasterData(username: string): Promise<FarcasterData>
   const casts = await getFarcasterCasts(user.fid, 10)
 
   // Calculate total engagement
+  const totalLikes = casts.reduce((sum, cast) => sum + (cast.reactions?.likes_count || 0), 0)
+  const totalComments = casts.reduce((sum, cast) => sum + (cast.replies?.count || 0), 0)
+
+  return {
+    user,
+    casts,
+    totalLikes,
+    totalComments,
+  }
+}
+
+// Get complete Farcaster data for a user by FID
+export async function getFarcasterDataByFid(fid: number): Promise<FarcasterData> {
+  const user = await getFarcasterUserByFid(fid)
+
+  if (!user) {
+    return {
+      user: null,
+      casts: [],
+      totalLikes: 0,
+      totalComments: 0,
+      error: "User not found",
+    }
+  }
+
+  const casts = await getFarcasterCasts(user.fid, 10)
+
   const totalLikes = casts.reduce((sum, cast) => sum + (cast.reactions?.likes_count || 0), 0)
   const totalComments = casts.reduce((sum, cast) => sum + (cast.replies?.count || 0), 0)
 

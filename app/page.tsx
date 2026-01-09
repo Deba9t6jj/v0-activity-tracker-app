@@ -1,8 +1,11 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import dynamic from "next/dynamic"
 import { useFarcasterContext } from "@/hooks/use-farcaster-context"
+import { BottomNav, BottomNavAlways } from "@/components/bottom-nav"
 
 // Dynamic imports for client components
 const OnboardingScreen = dynamic(
@@ -31,6 +34,7 @@ export default function Home() {
   const [userData, setUserData] = useState({
     farcasterUsername: "",
     walletAddress: "",
+    farcasterFid: null as number | null,
   })
   const [isInitialized, setIsInitialized] = useState(false)
 
@@ -38,11 +42,11 @@ export default function Home() {
 
   useEffect(() => {
     if (isSDKLoaded && !isInitialized) {
-      if (isInFrame && user?.username) {
-        // Auto-login with Farcaster user data
+      if (isInFrame && user?.fid) {
         setUserData({
-          farcasterUsername: user.username,
+          farcasterUsername: user.username || user.displayName || "",
           walletAddress: "",
+          farcasterFid: user.fid,
         })
         setCurrentScreen("dashboard")
       }
@@ -51,7 +55,10 @@ export default function Home() {
   }, [isSDKLoaded, isInFrame, user, isInitialized])
 
   const handleOnboardingSubmit = (data: { farcasterUsername: string; walletAddress: string }) => {
-    setUserData(data)
+    setUserData({
+      ...data,
+      farcasterFid: null,
+    })
     setCurrentScreen("dashboard")
   }
 
@@ -60,12 +67,15 @@ export default function Home() {
   }
 
   const handleUpdateSettings = (data: { farcasterUsername: string; walletAddress: string }) => {
-    setUserData(data)
+    setUserData({
+      ...data,
+      farcasterFid: null,
+    })
     setCurrentScreen("dashboard")
   }
 
   const handleLogout = () => {
-    setUserData({ farcasterUsername: "", walletAddress: "" })
+    setUserData({ farcasterUsername: "", walletAddress: "", farcasterFid: null })
     setCurrentScreen("onboarding")
   }
 
@@ -87,42 +97,65 @@ export default function Home() {
     )
   }
 
+  const renderWithBottomNav = (content: React.ReactNode) => {
+    if (currentScreen !== "onboarding") {
+      return (
+        <>
+          <div className="pb-24">{content}</div>
+          {isInFrame ? (
+            <BottomNavAlways activeTab={currentScreen} onNavigate={handleNavigate} />
+          ) : (
+            <BottomNav activeTab={currentScreen} onNavigate={handleNavigate} />
+          )}
+        </>
+      )
+    }
+    return content
+  }
+
   switch (currentScreen) {
     case "onboarding":
       return <OnboardingScreen onSubmit={handleOnboardingSubmit} />
     case "dashboard":
-      return (
+      return renderWithBottomNav(
         <DashboardScreen
           farcasterUsername={userData.farcasterUsername}
+          farcasterFid={userData.farcasterFid}
           walletAddress={userData.walletAddress}
           onNavigate={handleNavigate}
-        />
+          isInFrame={isInFrame}
+        />,
       )
     case "guide":
-      return (
+      return renderWithBottomNav(
         <GuideScreen
           farcasterUsername={userData.farcasterUsername}
+          farcasterFid={userData.farcasterFid}
           walletAddress={userData.walletAddress}
           onBack={() => setCurrentScreen("dashboard")}
-        />
+          isInFrame={isInFrame}
+        />,
       )
     case "stats":
-      return (
+      return renderWithBottomNav(
         <StatsScreen
           farcasterUsername={userData.farcasterUsername}
+          farcasterFid={userData.farcasterFid}
           walletAddress={userData.walletAddress}
           onBack={() => setCurrentScreen("dashboard")}
-        />
+          isInFrame={isInFrame}
+        />,
       )
     case "settings":
-      return (
+      return renderWithBottomNav(
         <SettingsScreen
           farcasterUsername={userData.farcasterUsername}
           walletAddress={userData.walletAddress}
           onBack={() => setCurrentScreen("dashboard")}
           onUpdate={handleUpdateSettings}
           onLogout={handleLogout}
-        />
+          isInFrame={isInFrame}
+        />,
       )
     default:
       return <OnboardingScreen onSubmit={handleOnboardingSubmit} />

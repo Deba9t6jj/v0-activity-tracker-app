@@ -11,14 +11,17 @@ export interface WalletDataWithHistory extends WalletData {
   balanceHistory?: { date: string; balance: number }[]
 }
 
-export function useFarcasterData(username: string | null) {
+export function useFarcasterData(username: string | null, fid?: number | null) {
+  // Prefer FID if available, otherwise use username
+  const queryParam = fid ? `fid=${fid}` : username ? `username=${encodeURIComponent(username)}` : null
+
   const { data, error, isLoading, mutate } = useSWR<FarcasterData>(
-    username ? `/api/farcaster?username=${encodeURIComponent(username)}` : null,
+    queryParam ? `/api/farcaster?${queryParam}` : null,
     fetcher,
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
-      dedupingInterval: 60000, // 1 minute
+      dedupingInterval: 60000,
     },
   )
 
@@ -37,7 +40,7 @@ export function useWalletData(address: string | null) {
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
-      dedupingInterval: 30000, // 30 seconds
+      dedupingInterval: 30000,
     },
   )
 
@@ -75,7 +78,7 @@ export function useNFTData(address: string | null, chain = "base") {
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
-      dedupingInterval: 300000, // 5 minutes
+      dedupingInterval: 300000,
     },
   )
 

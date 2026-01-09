@@ -9,12 +9,14 @@ import { useFarcasterData } from "@/hooks/use-activity-data"
 
 interface StatsScreenProps {
   farcasterUsername: string
+  farcasterFid?: number | null
   walletAddress: string
   onBack: () => void
+  isInFrame?: boolean
 }
 
-export function StatsScreen({ farcasterUsername, onBack }: StatsScreenProps) {
-  const { data: farcasterData, isLoading: farcasterLoading } = useFarcasterData(farcasterUsername || null)
+export function StatsScreen({ farcasterUsername, farcasterFid, onBack, isInFrame }: StatsScreenProps) {
+  const { data: farcasterData, isLoading: farcasterLoading } = useFarcasterData(farcasterUsername || null, farcasterFid)
 
   const socialChartData =
     farcasterData?.casts

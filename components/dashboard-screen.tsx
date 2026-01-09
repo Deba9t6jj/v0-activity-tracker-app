@@ -9,8 +9,10 @@ import { useFarcasterData } from "@/hooks/use-activity-data"
 
 interface DashboardScreenProps {
   farcasterUsername: string
+  farcasterFid?: number | null
   walletAddress: string
   onNavigate: (screen: string) => void
+  isInFrame?: boolean
 }
 
 function formatRelativeTime(timestamp: string): string {
@@ -73,73 +75,109 @@ function ProfileImage({ src, alt, size = "md" }: { src?: string | null; alt: str
   )
 }
 
-export function DashboardScreen({ farcasterUsername, onNavigate }: DashboardScreenProps) {
+export function DashboardScreen({ farcasterUsername, farcasterFid, onNavigate, isInFrame }: DashboardScreenProps) {
   const [activeTab, setActiveTab] = useState("dashboard")
 
   const {
     data: farcasterData,
     isLoading: farcasterLoading,
     refresh: refreshFarcaster,
-  } = useFarcasterData(farcasterUsername || null)
+  } = useFarcasterData(farcasterUsername || null, farcasterFid)
 
   const handleRefresh = () => {
     refreshFarcaster()
   }
 
+  const displayName = farcasterData?.user?.display_name || farcasterUsername
+
   return (
     <div className="min-h-screen" style={{ background: "linear-gradient(145deg, #f0f0f3 0%, #e6e6ea 100%)" }}>
       <header
-        className="sticky top-0 z-50 px-4 py-4"
+        className="sticky top-0 z-50 px-4 py-3 hidden md:block"
         style={{ background: "linear-gradient(145deg, #f0f0f3, #e6e6ea)" }}
       >
-        <div className="max-w-5xl mx-auto">
-          <div className="glass-card px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+        <div className="max-w-4xl mx-auto">
+          <div
+            className="flex items-center justify-between gap-4 px-4 py-2 rounded-2xl"
+            style={{
+              background: "rgba(255, 255, 255, 0.8)",
+              backdropFilter: "blur(12px)",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04), inset 0 0 0 1px rgba(255, 255, 255, 0.6)",
+            }}
+          >
+            {/* Logo */}
+            <div className="flex items-center gap-2.5 shrink-0">
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
                 style={{ background: "oklch(0.55 0.2 250)" }}
               >
-                <Activity className="w-5 h-5 text-white" />
+                <Activity className="w-4 h-4 text-white" />
               </div>
-              <span className="text-base font-semibold">Activity Tracker</span>
+              <span className="text-sm font-semibold">Activity Tracker</span>
             </div>
 
-            <div className="pill-nav">
-              {[
-                { id: "dashboard", label: "Dashboard" },
-                { id: "guide", label: "Guide" },
-                { id: "stats", label: "Stats" },
-                { id: "settings", label: "Settings" },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => (tab.id === "dashboard" ? setActiveTab(tab.id) : onNavigate(tab.id))}
-                  className={`pill-nav-item ${activeTab === tab.id ? "active" : ""}`}
-                  style={{
-                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                  }}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+            {/* Full-width Navigation */}
+            {!isInFrame && (
+              <div className="pill-nav flex-1 max-w-md">
+                {[
+                  { id: "dashboard", label: "Dashboard" },
+                  { id: "guide", label: "Guide" },
+                  { id: "stats", label: "Stats" },
+                  { id: "settings", label: "Settings" },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => (tab.id === "dashboard" ? setActiveTab(tab.id) : onNavigate(tab.id))}
+                    className={`pill-nav-item ${activeTab === tab.id ? "active" : ""}`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
-            <div className="flex items-center gap-3">
+            {/* Right side actions */}
+            <div className="flex items-center gap-2 shrink-0">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleRefresh}
-                className="rounded-full w-10 h-10"
+                className="rounded-full w-8 h-8"
                 style={{ background: "rgba(255,255,255,0.5)" }}
               >
-                <RefreshCw className={`w-4 h-4 ${farcasterLoading ? "animate-spin" : ""}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${farcasterLoading ? "animate-spin" : ""}`} />
               </Button>
-              <ProfileImage
-                src={farcasterData?.user?.pfp_url}
-                alt={farcasterData?.user?.display_name || farcasterUsername}
-                size="sm"
-              />
+              <ProfileImage src={farcasterData?.user?.pfp_url} alt={displayName} size="sm" />
             </div>
+          </div>
+        </div>
+      </header>
+
+      <header
+        className="sticky top-0 z-50 px-4 py-3 md:hidden"
+        style={{ background: "linear-gradient(145deg, #f0f0f3, #e6e6ea)" }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ background: "oklch(0.55 0.2 250)" }}
+            >
+              <Activity className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-sm font-semibold">Activity Tracker</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleRefresh}
+              className="rounded-full w-8 h-8"
+              style={{ background: "rgba(255,255,255,0.5)" }}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${farcasterLoading ? "animate-spin" : ""}`} />
+            </Button>
+            <ProfileImage src={farcasterData?.user?.pfp_url} alt={displayName} size="sm" />
           </div>
         </div>
       </header>
@@ -147,12 +185,12 @@ export function DashboardScreen({ farcasterUsername, onNavigate }: DashboardScre
       <main className="max-w-5xl mx-auto px-4 py-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           <h1 className="text-2xl font-semibold" style={{ color: "oklch(0.55 0.2 250)" }}>
-            Good Morning, {farcasterData?.user?.display_name || farcasterUsername}!
+            Good Morning, {displayName}!
           </h1>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Profile Card - Like reference image 4 */}
+          {/* Profile Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -184,13 +222,11 @@ export function DashboardScreen({ farcasterUsername, onNavigate }: DashboardScre
                 <h3 className="font-semibold text-xl mt-4">{farcasterData.user.display_name}</h3>
                 <p className="text-sm text-muted-foreground">@{farcasterData.user.username}</p>
 
-                {/* Tags like profile card reference */}
                 <div className="flex gap-2 mt-3">
                   <span className="px-3 py-1 rounded-full text-xs bg-white/60 text-muted-foreground">Farcaster</span>
                   <span className="px-3 py-1 rounded-full text-xs bg-white/60 text-muted-foreground">Base</span>
                 </div>
 
-                {/* Stats row like profile card reference */}
                 <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/30">
                   <div className="text-center">
                     <div className="flex items-center gap-1 justify-center">
@@ -211,7 +247,6 @@ export function DashboardScreen({ farcasterUsername, onNavigate }: DashboardScre
                   </div>
                 </div>
 
-                {/* CTA button like profile card */}
                 <div className="flex gap-2 mt-4">
                   <button
                     className="flex-1 py-3 rounded-full text-sm font-medium"
@@ -239,7 +274,7 @@ export function DashboardScreen({ farcasterUsername, onNavigate }: DashboardScre
             )}
           </motion.div>
 
-          {/* Engagement Chart - Like Youcare Health Trend */}
+          {/* Engagement Chart */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -264,7 +299,6 @@ export function DashboardScreen({ farcasterUsername, onNavigate }: DashboardScre
                 %
               </span>
             </div>
-            {/* Simple bar chart like Youcare */}
             <div className="flex items-end gap-1 h-20">
               {["Mon", "Tue", "Wed", "Thu"].map((day, i) => (
                 <div key={day} className="flex-1 flex flex-col items-center gap-1">
@@ -281,7 +315,7 @@ export function DashboardScreen({ farcasterUsername, onNavigate }: DashboardScre
             </div>
           </motion.div>
 
-          {/* Activity Progress - Like Retainable */}
+          {/* Activity Progress */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -292,7 +326,6 @@ export function DashboardScreen({ farcasterUsername, onNavigate }: DashboardScre
               <h3 className="font-medium">Activity Progress</h3>
               <span className="text-xs text-muted-foreground">...</span>
             </div>
-            {/* Timeline items like Retainable checkup progress */}
             <div className="space-y-4">
               {[
                 { date: "Today", label: "Posted 3 casts", done: true },
@@ -318,7 +351,7 @@ export function DashboardScreen({ farcasterUsername, onNavigate }: DashboardScre
             </div>
           </motion.div>
 
-          {/* Recent Casts - Like Retainable task status */}
+          {/* Recent Casts */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -344,8 +377,8 @@ export function DashboardScreen({ farcasterUsername, onNavigate }: DashboardScre
                   <Skeleton className="h-16 rounded-2xl" />
                   <Skeleton className="h-16 rounded-2xl" />
                 </>
-              ) : (
-                farcasterData?.casts?.slice(0, 3).map((cast) => (
+              ) : farcasterData?.casts?.length ? (
+                farcasterData.casts.slice(0, 3).map((cast) => (
                   <div key={cast.hash} className="task-card">
                     <p className="text-sm line-clamp-1 mb-2">{cast.text}</p>
                     <div className="flex items-center justify-between">
@@ -358,7 +391,6 @@ export function DashboardScreen({ farcasterUsername, onNavigate }: DashboardScre
                           {cast.replies?.count || 0}
                         </span>
                       </div>
-                      {/* Status indicator like hexagon AI */}
                       <div className="status-indicator">
                         <span className="text-muted-foreground">{formatRelativeTime(cast.timestamp)}</span>
                         <span className={`status-dot ${(cast.reactions?.likes_count || 0) > 5 ? "done" : "working"}`} />
@@ -366,6 +398,8 @@ export function DashboardScreen({ farcasterUsername, onNavigate }: DashboardScre
                     </div>
                   </div>
                 ))
+              ) : (
+                <div className="text-center py-4 text-muted-foreground text-sm">No recent casts</div>
               )}
             </div>
           </motion.div>
@@ -406,6 +440,33 @@ export function DashboardScreen({ farcasterUsername, onNavigate }: DashboardScre
           </motion.div>
         </div>
       </main>
+
+      {/* Bottom Nav for mini app frame */}
+      {isInFrame && (
+        <footer className="fixed bottom-0 left-0 right-0 px-4 py-4 bg-background">
+          <div className="max-w-5xl mx-auto">
+            <div className="pill-nav">
+              {[
+                { id: "dashboard", label: "Dashboard" },
+                { id: "guide", label: "Guide" },
+                { id: "stats", label: "Stats" },
+                { id: "settings", label: "Settings" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => (tab.id === "dashboard" ? setActiveTab(tab.id) : onNavigate(tab.id))}
+                  className={`pill-nav-item ${activeTab === tab.id ? "active" : ""}`}
+                  style={{
+                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </footer>
+      )}
     </div>
   )
 }

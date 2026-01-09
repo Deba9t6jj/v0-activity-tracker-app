@@ -1,17 +1,17 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { getFarcasterData } from "@/lib/farcaster-api"
+import { getFarcasterData, getFarcasterDataByFid } from "@/lib/farcaster-api"
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const username = searchParams.get("username")
+  const fid = searchParams.get("fid")
 
-  if (!username) {
-    return NextResponse.json({ error: "Username is required" }, { status: 400 })
+  if (!username && !fid) {
+    return NextResponse.json({ error: "Username or FID is required" }, { status: 400 })
   }
 
   const apiKey = process.env.NEYNAR_API_KEY
   console.log("[v0] NEYNAR_API_KEY exists:", !!apiKey)
-  console.log("[v0] NEYNAR_API_KEY length:", apiKey?.length || 0)
 
   if (!apiKey) {
     return NextResponse.json(
@@ -20,10 +20,11 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const data = await getFarcasterData(username)
+  const data = fid ? await getFarcasterDataByFid(Number.parseInt(fid, 10)) : await getFarcasterData(username!)
 
   console.log("[v0] Farcaster data response:", {
     hasUser: !!data.user,
+    username: data.user?.username,
     pfp_url: data.user?.pfp_url,
     display_name: data.user?.display_name,
   })

@@ -148,35 +148,47 @@
   box-shadow: inset 3px 3px 6px #d1d1d4, inset -3px -3px 6px #ffffff;
 }
 
-/* Pill navigation style like Youcare */
+/* Redesigned pill navigation with strict constraints:
+   - Navbar height: 48px
+   - Active tab height: 36px max
+   - Padding: 14px horizontal, 6px vertical
+   - Border radius: 12px (subtle, not fully pill)
+   - Shadow: very soft
+   - Text: 14px medium weight
+   - Apple iOS segmented control style */
 .pill-nav {
-  @apply flex items-center gap-1 p-1.5 rounded-full;
-  /* smoother, more subtle neumorphic background */
-  background: linear-gradient(145deg, rgba(248, 248, 252, 0.9), rgba(240, 240, 244, 0.95));
-  box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.9), inset -1px -1px 2px rgba(0, 0, 0, 0.03), 0 2px 8px
-    rgba(0, 0, 0, 0.04);
-  backdrop-filter: blur(8px);
+  @apply flex items-center justify-center w-full;
+  height: 48px;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 14px;
+  background: oklch(0.97 0.002 250);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  border: 1px solid oklch(0.92 0.004 250);
 }
 
 .pill-nav-item {
-  /* smoother transitions and padding */
-  @apply px-5 py-2 rounded-full text-sm font-medium cursor-pointer;
-  color: oklch(0.5 0.02 250);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  @apply font-medium cursor-pointer whitespace-nowrap flex items-center justify-center;
+  height: 36px;
+  padding: 6px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: oklch(0.45 0.01 250);
+  transition: all 0.15s ease;
+  letter-spacing: -0.01em;
 }
 
 .pill-nav-item:hover:not(.active) {
-  /* subtle hover state */
-  background: rgba(255, 255, 255, 0.6);
-  color: oklch(0.35 0.02 250);
+  color: oklch(0.3 0.015 250);
+  background: oklch(0.94 0.003 250);
 }
 
 .pill-nav-item.active {
   @apply text-white;
-  /* smoother active state with softer shadow */
-  background: linear-gradient(135deg, oklch(0.55 0.2 250), oklch(0.52 0.22 255));
-  box-shadow: 0 4px 12px oklch(0.55 0.2 250 / 0.35), 0 2px 4px oklch(0.55 0.2 250 / 0.2);
-  transform: scale(1.02);
+  height: 36px;
+  background: oklch(0.52 0.18 250);
+  box-shadow: 0 1px 2px oklch(0.52 0.18 250 / 0.2);
+  font-weight: 500;
 }
 
 /* Card with gradient bottom like profile card reference */
@@ -244,4 +256,9 @@
 /* Remove old gradient blobs - using soft solid background instead */
 .gradient-blob {
   display: none;
+}
+
+/* Mobile hidden class for top navigation */
+.top-nav-desktop {
+  @apply hidden md:flex;
 }

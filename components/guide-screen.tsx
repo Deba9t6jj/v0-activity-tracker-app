@@ -8,12 +8,14 @@ import { useFarcasterData } from "@/hooks/use-activity-data"
 
 interface GuideScreenProps {
   farcasterUsername: string
+  farcasterFid?: number | null
   walletAddress: string
   onBack: () => void
+  isInFrame?: boolean
 }
 
-export function GuideScreen({ farcasterUsername, onBack }: GuideScreenProps) {
-  const { data: farcasterData, isLoading } = useFarcasterData(farcasterUsername || null)
+export function GuideScreen({ farcasterUsername, farcasterFid, onBack, isInFrame }: GuideScreenProps) {
+  const { data: farcasterData, isLoading } = useFarcasterData(farcasterUsername || null, farcasterFid)
 
   const postsThisWeek = farcasterData?.casts?.length || 0
   const likesGiven = farcasterData?.totalLikes || 0
