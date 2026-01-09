@@ -6,6 +6,7 @@ import { motion } from "framer-motion"
 import { Activity, ArrowRight, HelpCircle, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useFarcasterContext } from "@/hooks/use-farcaster-context"
 
 interface OnboardingScreenProps {
   onSubmit: (data: { farcasterUsername: string; walletAddress: string }) => void
@@ -13,11 +14,18 @@ interface OnboardingScreenProps {
 
 export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
   const [farcasterUsername, setFarcasterUsername] = useState("")
+  const { isInFrame, user } = useFarcasterContext()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (farcasterUsername) {
       onSubmit({ farcasterUsername, walletAddress: "" })
+    }
+  }
+
+  const handleUseConnectedAccount = () => {
+    if (user?.username) {
+      onSubmit({ farcasterUsername: user.username, walletAddress: "" })
     }
   }
 
@@ -72,6 +80,46 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
               </p>
             </motion.div>
           </div>
+
+          {isInFrame && user?.username && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+              className="mb-6"
+            >
+              <button
+                onClick={handleUseConnectedAccount}
+                className="w-full p-4 rounded-2xl border-2 border-dashed border-[oklch(0.55_0.2_250)]/30 hover:border-[oklch(0.55_0.2_250)] hover:bg-[oklch(0.55_0.2_250)]/5 transition-all duration-300 group"
+              >
+                <div className="flex items-center gap-3">
+                  {user.pfpUrl && (
+                    <img
+                      src={user.pfpUrl || "/placeholder.svg"}
+                      alt={user.displayName || user.username}
+                      className="w-10 h-10 rounded-full ring-2 ring-[oklch(0.55_0.2_250)]/20"
+                    />
+                  )}
+                  <div className="text-left flex-1">
+                    <p className="font-medium text-sm">{user.displayName || user.username}</p>
+                    <p className="text-xs text-muted-foreground">@{user.username}</p>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-[oklch(0.55_0.2_250)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <p className="text-xs text-muted-foreground mt-2 text-left">
+                  Continue with your connected Farcaster account
+                </p>
+              </button>
+            </motion.div>
+          )}
+
+          {isInFrame && user?.username && (
+            <div className="flex items-center gap-3 mb-6">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-xs text-muted-foreground">or enter manually</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <motion.div
