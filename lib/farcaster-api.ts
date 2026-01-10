@@ -41,6 +41,26 @@ function getApiKey(): string {
   return process.env.NEYNAR_API_KEY || ""
 }
 
+function normalizeUsername(username: string): string {
+  // Remove @ prefix if present
+  let normalized = username.startsWith("@") ? username.slice(1) : username
+
+  // Remove common domain suffixes
+  const suffixes = [".farcaster.eth", ".base.eth", ".eth", ".xyz", ".lens"]
+  for (const suffix of suffixes) {
+    if (normalized.toLowerCase().endsWith(suffix)) {
+      normalized = normalized.slice(0, -suffix.length)
+      break
+    }
+  }
+
+  // Remove any remaining special characters that aren't valid in Farcaster usernames
+  // Farcaster usernames can only contain lowercase letters, numbers, and underscores
+  normalized = normalized.toLowerCase().trim()
+
+  return normalized
+}
+
 // Get user by username
 export async function getFarcasterUser(username: string): Promise<FarcasterUser | null> {
   try {
@@ -50,10 +70,11 @@ export async function getFarcasterUser(username: string): Promise<FarcasterUser 
       return null
     }
 
-    console.log("[v0] Fetching Farcaster user by username:", username)
+    const normalizedUsername = normalizeUsername(username)
+    console.log("[v0] Fetching Farcaster user by username:", username, "-> normalized:", normalizedUsername)
 
     const response = await fetch(
-      `https://api.neynar.com/v2/farcaster/user/by_username?username=${encodeURIComponent(username)}`,
+      `https://api.neynar.com/v2/farcaster/user/by_username?username=${encodeURIComponent(normalizedUsername)}`,
       {
         headers: {
           accept: "application/json",

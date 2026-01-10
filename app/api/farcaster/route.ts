@@ -20,6 +20,10 @@ export async function GET(request: NextRequest) {
     )
   }
 
+  if (username) {
+    console.log("[v0] Original username from request:", username)
+  }
+
   const data = fid ? await getFarcasterDataByFid(Number.parseInt(fid, 10)) : await getFarcasterData(username!)
 
   console.log("[v0] Farcaster data response:", {
