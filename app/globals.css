@@ -262,3 +262,139 @@
 .top-nav-desktop {
   @apply hidden md:flex;
 }
+
+/* Add animated laser flow glow effect for activity cards */
+/* Animated border glow keyframes - simulates laser beam flowing around the card */
+@keyframes laser-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes laser-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+    filter: blur(8px);
+  }
+  50% {
+    opacity: 1;
+    filter: blur(12px);
+  }
+}
+
+@keyframes glow-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Base laser card wrapper */
+.laser-card {
+  position: relative;
+  border-radius: 1.5rem;
+  overflow: hidden;
+}
+
+.laser-card::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 1.6rem;
+  padding: 2px;
+  background: var(--laser-gradient);
+  background-size: 300% 300%;
+  animation: laser-flow 4s ease infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.laser-card::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: 2rem;
+  background: var(--laser-glow);
+  background-size: 300% 300%;
+  animation: laser-flow 4s ease infinite, laser-pulse 2s ease-in-out infinite;
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Diamond tier - violet/purple/blue */
+.laser-card-diamond {
+  --laser-gradient: linear-gradient(90deg, #8b5cf6 0%, #a855f7 20%, #3b82f6 40%, #8b5cf6 60%, #a855f7 80%, #3b82f6 100%);
+  --laser-glow: radial-gradient(
+    ellipse at center,
+    rgba(139, 92, 246, 0.4) 0%,
+    rgba(168, 85, 247, 0.2) 40%,
+    transparent 70%
+  );
+}
+
+/* Platinum tier - silver/slate with shimmer */
+.laser-card-platinum {
+  --laser-gradient: linear-gradient(90deg, #94a3b8 0%, #e2e8f0 20%, #cbd5e1 40%, #94a3b8 60%, #e2e8f0 80%, #cbd5e1 100%);
+  --laser-glow: radial-gradient(
+    ellipse at center,
+    rgba(148, 163, 184, 0.5) 0%,
+    rgba(226, 232, 240, 0.3) 40%,
+    transparent 70%
+  );
+}
+
+/* Gold tier - amber/yellow/orange */
+.laser-card-gold {
+  --laser-gradient: linear-gradient(90deg, #f59e0b 0%, #fbbf24 20%, #f97316 40%, #f59e0b 60%, #fbbf24 80%, #f97316 100%);
+  --laser-glow: radial-gradient(
+    ellipse at center,
+    rgba(251, 191, 36, 0.5) 0%,
+    rgba(245, 158, 11, 0.3) 40%,
+    transparent 70%
+  );
+}
+
+/* Silver tier - gray/slate subtle */
+.laser-card-silver {
+  --laser-gradient: linear-gradient(90deg, #9ca3af 0%, #d1d5db 20%, #6b7280 40%, #9ca3af 60%, #d1d5db 80%, #6b7280 100%);
+  --laser-glow: radial-gradient(
+    ellipse at center,
+    rgba(156, 163, 175, 0.4) 0%,
+    rgba(209, 213, 219, 0.2) 40%,
+    transparent 70%
+  );
+}
+
+/* Bronze tier - orange/brown warm */
+.laser-card-bronze {
+  --laser-gradient: linear-gradient(90deg, #c2410c 0%, #d97706 20%, #92400e 40%, #c2410c 60%, #d97706 80%, #92400e 100%);
+  --laser-glow: radial-gradient(
+    ellipse at center,
+    rgba(180, 83, 9, 0.4) 0%,
+    rgba(217, 119, 6, 0.2) 40%,
+    transparent 70%
+  );
+}
+
+/* Enhanced glow on hover */
+.laser-card:hover::after {
+  opacity: 0.7;
+  filter: blur(16px);
+}
+
+.laser-card:hover::before {
+  animation-duration: 2s;
+}

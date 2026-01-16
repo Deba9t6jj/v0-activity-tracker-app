@@ -25,14 +25,15 @@ interface ActivityCardModalProps {
 
 type GenerationState = "idle" | "analyzing" | "complete"
 
-// Tier calculation based on average engagement per cast
 function getTier(avgEngagement: number): {
   name: string
+  laserClass: string
   colors: { primary: string; secondary: string; glow: string; text: string }
 } {
   if (avgEngagement >= 40) {
     return {
       name: "Diamond",
+      laserClass: "laser-card-diamond",
       colors: {
         primary: "from-violet-500 via-purple-500 to-blue-500",
         secondary: "from-violet-600 to-blue-600",
@@ -44,6 +45,7 @@ function getTier(avgEngagement: number): {
   if (avgEngagement >= 20) {
     return {
       name: "Platinum",
+      laserClass: "laser-card-platinum",
       colors: {
         primary: "from-slate-300 via-gray-200 to-slate-400",
         secondary: "from-slate-400 to-gray-300",
@@ -55,6 +57,7 @@ function getTier(avgEngagement: number): {
   if (avgEngagement >= 10) {
     return {
       name: "Gold",
+      laserClass: "laser-card-gold",
       colors: {
         primary: "from-amber-400 via-yellow-400 to-orange-400",
         secondary: "from-amber-500 to-yellow-500",
@@ -66,6 +69,7 @@ function getTier(avgEngagement: number): {
   if (avgEngagement >= 5) {
     return {
       name: "Silver",
+      laserClass: "laser-card-silver",
       colors: {
         primary: "from-gray-300 via-slate-200 to-gray-400",
         secondary: "from-gray-400 to-slate-300",
@@ -76,6 +80,7 @@ function getTier(avgEngagement: number): {
   }
   return {
     name: "Bronze",
+    laserClass: "laser-card-bronze",
     colors: {
       primary: "from-orange-700 via-amber-700 to-yellow-800",
       secondary: "from-orange-800 to-amber-700",
@@ -308,101 +313,102 @@ export function ActivityCardModal({ isOpen, onClose, userData }: ActivityCardMod
               </motion.div>
             )}
 
-            {/* Complete state - show the card */}
+            {/* Complete state - show the card with laser glow effect */}
             {state === "complete" && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                {/* The Activity Card */}
-                <div
-                  ref={cardRef}
-                  className={`relative rounded-3xl overflow-hidden ${tier.colors.glow}`}
-                  style={{ aspectRatio: "1 / 1.2" }}
-                >
-                  {/* Background gradient based on tier */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${tier.colors.primary}`} />
-
-                  {/* Glow effect at top */}
+                <div className={`laser-card ${tier.laserClass}`}>
                   <div
-                    className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-32"
-                    style={{
-                      background: "linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 100%)",
-                      filter: "blur(20px)",
-                    }}
-                  />
+                    ref={cardRef}
+                    className="relative rounded-3xl overflow-hidden"
+                    style={{ aspectRatio: "1 / 1.2" }}
+                  >
+                    {/* Background gradient based on tier */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${tier.colors.primary}`} />
 
-                  {/* Content */}
-                  <div className="relative h-full flex flex-col p-6">
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-6">
-                      <span className={`text-sm font-semibold ${tier.colors.text} opacity-80`}>Activity Tracker</span>
-                      <div className={`px-3 py-1 rounded-full text-xs font-bold bg-white/20 ${tier.colors.text}`}>
-                        {tier.name}
-                      </div>
-                    </div>
+                    {/* Glow effect at top */}
+                    <div
+                      className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-32"
+                      style={{
+                        background: "linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 100%)",
+                        filter: "blur(20px)",
+                      }}
+                    />
 
-                    {/* Profile section */}
-                    <div className="flex-1 flex flex-col items-center justify-center text-center">
-                      <ProfileImage src={userData.pfpUrl} alt={userData.displayName} />
-                      <h3 className={`text-2xl font-bold mt-4 ${tier.colors.text}`}>
-                        {userData.displayName}
-                        <span className="ml-2 inline-block">
-                          <svg className="w-5 h-5 inline text-blue-400" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </span>
-                      </h3>
-                      <p className={`text-sm ${tier.colors.text} opacity-70 mt-1`}>@{userData.username}</p>
+                    {/* Content */}
+                    <div className="relative h-full flex flex-col p-6">
+                      {/* Header */}
+                      <div className="flex items-center justify-between mb-6">
+                        <span className={`text-sm font-semibold ${tier.colors.text} opacity-80`}>Activity Tracker</span>
+                        <div className={`px-3 py-1 rounded-full text-xs font-bold bg-white/20 ${tier.colors.text}`}>
+                          {tier.name}
+                        </div>
+                      </div>
 
-                      {/* Status label */}
-                      <div className={`mt-3 px-4 py-1.5 rounded-full bg-white/15 ${tier.colors.text} text-sm`}>
-                        {userData.avgEngagement >= 20
-                          ? "High Engagement Creator"
-                          : userData.avgEngagement >= 10
-                            ? "Growing Account"
-                            : "Active Builder"}
-                      </div>
-                    </div>
+                      {/* Profile section */}
+                      <div className="flex-1 flex flex-col items-center justify-center text-center">
+                        <ProfileImage src={userData.pfpUrl} alt={userData.displayName} />
+                        <h3 className={`text-2xl font-bold mt-4 ${tier.colors.text}`}>
+                          {userData.displayName}
+                          <span className="ml-2 inline-block">
+                            <svg className="w-5 h-5 inline text-blue-400" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </span>
+                        </h3>
+                        <p className={`text-sm ${tier.colors.text} opacity-70 mt-1`}>@{userData.username}</p>
 
-                    {/* Stats pills */}
-                    <div className="flex justify-center gap-3 mb-4">
-                      <div className={`px-4 py-2 rounded-xl bg-white/15 ${tier.colors.text}`}>
-                        <span className="text-lg font-bold">{userData.avgEngagement.toFixed(1)}</span>
-                        <span className="text-xs opacity-70 ml-1">Avg Eng</span>
+                        {/* Status label */}
+                        <div className={`mt-3 px-4 py-1.5 rounded-full bg-white/15 ${tier.colors.text} text-sm`}>
+                          {userData.avgEngagement >= 20
+                            ? "High Engagement Creator"
+                            : userData.avgEngagement >= 10
+                              ? "Growing Account"
+                              : "Active Builder"}
+                        </div>
                       </div>
-                      <div className={`px-4 py-2 rounded-xl bg-white/15 ${tier.colors.text}`}>
-                        <span className="text-lg font-bold">{userData.avgLikesPerCast.toFixed(1)}</span>
-                        <span className="text-xs opacity-70 ml-1">Avg Likes</span>
-                      </div>
-                    </div>
 
-                    {/* Bottom stats */}
-                    <div className="flex items-center justify-between pt-4 border-t border-white/20">
-                      <div className={`flex items-center gap-1.5 ${tier.colors.text}`}>
-                        <Users className="w-4 h-4 opacity-70" />
-                        <span className="font-semibold">{userData.followers.toLocaleString()}</span>
+                      {/* Stats pills */}
+                      <div className="flex justify-center gap-3 mb-4">
+                        <div className={`px-4 py-2 rounded-xl bg-white/15 ${tier.colors.text}`}>
+                          <span className="text-lg font-bold">{userData.avgEngagement.toFixed(1)}</span>
+                          <span className="text-xs opacity-70 ml-1">Avg Eng</span>
+                        </div>
+                        <div className={`px-4 py-2 rounded-xl bg-white/15 ${tier.colors.text}`}>
+                          <span className="text-lg font-bold">{userData.avgLikesPerCast.toFixed(1)}</span>
+                          <span className="text-xs opacity-70 ml-1">Avg Likes</span>
+                        </div>
                       </div>
-                      <div className={`flex items-center gap-1.5 ${tier.colors.text}`}>
-                        <MessageCircle className="w-4 h-4 opacity-70" />
-                        <span className="font-semibold">{userData.castsCount}</span>
-                      </div>
-                      <Button
-                        size="sm"
-                        className="rounded-full px-4 bg-white/90 text-gray-900 hover:bg-white font-semibold"
-                      >
-                        Follow +
-                      </Button>
-                    </div>
 
-                    {/* Mini chart */}
-                    <div className="mt-4 h-12 flex items-end gap-0.5">
-                      {Array.from({ length: 30 }).map((_, i) => (
-                        <div
-                          key={i}
-                          className="flex-1 rounded-t bg-white/30"
-                          style={{
-                            height: `${Math.max(15, Math.sin((i / 30) * Math.PI * 2) * 40 + 50 + Math.random() * 20)}%`,
-                          }}
-                        />
-                      ))}
+                      {/* Bottom stats */}
+                      <div className="flex items-center justify-between pt-4 border-t border-white/20">
+                        <div className={`flex items-center gap-1.5 ${tier.colors.text}`}>
+                          <Users className="w-4 h-4 opacity-70" />
+                          <span className="font-semibold">{userData.followers.toLocaleString()}</span>
+                        </div>
+                        <div className={`flex items-center gap-1.5 ${tier.colors.text}`}>
+                          <MessageCircle className="w-4 h-4 opacity-70" />
+                          <span className="font-semibold">{userData.castsCount}</span>
+                        </div>
+                        <Button
+                          size="sm"
+                          className="rounded-full px-4 bg-white/90 text-gray-900 hover:bg-white font-semibold"
+                        >
+                          Follow +
+                        </Button>
+                      </div>
+
+                      {/* Mini chart */}
+                      <div className="mt-4 h-12 flex items-end gap-0.5">
+                        {Array.from({ length: 30 }).map((_, i) => (
+                          <div
+                            key={i}
+                            className="flex-1 rounded-t bg-white/30"
+                            style={{
+                              height: `${Math.max(15, Math.sin((i / 30) * Math.PI * 2) * 40 + 50 + Math.random() * 20)}%`,
+                            }}
+                          />
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
