@@ -2,10 +2,11 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Activity, MessageSquare, Heart, MessageCircle, RefreshCw, Star } from "lucide-react"
+import { Activity, MessageSquare, Heart, MessageCircle, RefreshCw, Star, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useFarcasterData } from "@/hooks/use-activity-data"
+import { ActivityCardModal } from "@/components/activity-card-modal"
 
 interface DashboardScreenProps {
   farcasterUsername: string
@@ -77,6 +78,7 @@ function ProfileImage({ src, alt, size = "md" }: { src?: string | null; alt: str
 
 export function DashboardScreen({ farcasterUsername, farcasterFid, onNavigate, isInFrame }: DashboardScreenProps) {
   const [activeTab, setActiveTab] = useState("dashboard")
+  const [showActivityCardModal, setShowActivityCardModal] = useState(false)
 
   const {
     data: farcasterData,
@@ -89,6 +91,22 @@ export function DashboardScreen({ farcasterUsername, farcasterFid, onNavigate, i
   }
 
   const displayName = farcasterData?.user?.display_name || farcasterUsername
+
+  const activityCardData = {
+    username: farcasterData?.user?.username || farcasterUsername,
+    displayName: farcasterData?.user?.display_name || farcasterUsername,
+    pfpUrl: farcasterData?.user?.pfp_url,
+    bio: farcasterData?.user?.profile?.bio?.text,
+    followers: farcasterData?.user?.follower_count || 0,
+    following: farcasterData?.user?.following_count || 0,
+    totalLikes: farcasterData?.totalLikes || 0,
+    totalComments: farcasterData?.totalComments || 0,
+    castsCount: farcasterData?.casts?.length || 0,
+    avgEngagement:
+      ((farcasterData?.totalLikes || 0) + (farcasterData?.totalComments || 0)) /
+      Math.max(farcasterData?.casts?.length || 1, 1),
+    avgLikesPerCast: (farcasterData?.totalLikes || 0) / Math.max(farcasterData?.casts?.length || 1, 1),
+  }
 
   return (
     <div className="min-h-screen" style={{ background: "linear-gradient(145deg, #f0f0f3 0%, #e6e6ea 100%)" }}>
@@ -351,6 +369,59 @@ export function DashboardScreen({ farcasterUsername, farcasterFid, onNavigate, i
             </div>
           </motion.div>
 
+          {/* Activity Card Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            className="md:col-span-3"
+          >
+            <div
+              className="relative overflow-hidden rounded-3xl p-6"
+              style={{
+                background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+              }}
+            >
+              {/* Background glow */}
+              <div
+                className="absolute top-0 right-0 w-64 h-64 opacity-30"
+                style={{
+                  background: "radial-gradient(circle, rgba(139,92,246,0.5) 0%, transparent 70%)",
+                  filter: "blur(40px)",
+                }}
+              />
+              <div
+                className="absolute bottom-0 left-0 w-48 h-48 opacity-20"
+                style={{
+                  background: "radial-gradient(circle, rgba(59,130,246,0.5) 0%, transparent 70%)",
+                  filter: "blur(30px)",
+                }}
+              />
+
+              <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="text-center md:text-left">
+                  <div className="flex items-center gap-2 justify-center md:justify-start mb-2">
+                    <Sparkles className="w-5 h-5 text-purple-400" />
+                    <span className="text-purple-300 text-sm font-medium">Activity Card</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-2">Generate Your Activity Card</h3>
+                  <p className="text-gray-400 text-sm max-w-md">
+                    Create a beautiful, shareable card showcasing your Farcaster activity and engagement metrics.
+                  </p>
+                </div>
+
+                <Button
+                  onClick={() => setShowActivityCardModal(true)}
+                  disabled={!farcasterData?.user}
+                  className="px-8 py-6 text-base font-semibold rounded-2xl bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white border-0 shadow-lg shadow-purple-500/25"
+                >
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Generate Activity Card
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+
           {/* Recent Casts */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -467,6 +538,12 @@ export function DashboardScreen({ farcasterUsername, farcasterFid, onNavigate, i
           </div>
         </footer>
       )}
+
+      <ActivityCardModal
+        isOpen={showActivityCardModal}
+        onClose={() => setShowActivityCardModal(false)}
+        userData={activityCardData}
+      />
     </div>
   )
 }
