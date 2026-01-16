@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Download, Share2, Sparkles, Heart, MessageCircle, Users } from "lucide-react"
+import { X, Download, Share2, Sparkles, Heart, MessageCircle, Users, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { toPng } from "html-to-image"
 
 interface ActivityCardModalProps {
   isOpen: boolean
@@ -27,66 +28,65 @@ type GenerationState = "idle" | "analyzing" | "complete"
 
 function getTier(avgEngagement: number): {
   name: string
-  laserClass: string
-  colors: { primary: string; secondary: string; glow: string; text: string }
+  accentColor: string
+  bgGradient: string
+  borderColor: string
+  glowColor: string
+  badgeBg: string
+  badgeText: string
 } {
   if (avgEngagement >= 40) {
     return {
       name: "Diamond",
-      laserClass: "laser-card-diamond",
-      colors: {
-        primary: "from-violet-500 via-purple-500 to-blue-500",
-        secondary: "from-violet-600 to-blue-600",
-        glow: "shadow-[0_0_60px_rgba(139,92,246,0.5)]",
-        text: "text-violet-100",
-      },
+      accentColor: "text-violet-600",
+      bgGradient: "from-violet-50 via-white to-purple-50",
+      borderColor: "border-violet-200",
+      glowColor: "shadow-[0_0_40px_rgba(139,92,246,0.3)]",
+      badgeBg: "bg-gradient-to-r from-violet-500 to-purple-500",
+      badgeText: "text-white",
     }
   }
   if (avgEngagement >= 20) {
     return {
       name: "Platinum",
-      laserClass: "laser-card-platinum",
-      colors: {
-        primary: "from-slate-300 via-gray-200 to-slate-400",
-        secondary: "from-slate-400 to-gray-300",
-        glow: "shadow-[0_0_50px_rgba(148,163,184,0.4)]",
-        text: "text-slate-700",
-      },
+      accentColor: "text-slate-600",
+      bgGradient: "from-slate-50 via-white to-gray-50",
+      borderColor: "border-slate-200",
+      glowColor: "shadow-[0_0_40px_rgba(148,163,184,0.3)]",
+      badgeBg: "bg-gradient-to-r from-slate-400 to-gray-500",
+      badgeText: "text-white",
     }
   }
   if (avgEngagement >= 10) {
     return {
       name: "Gold",
-      laserClass: "laser-card-gold",
-      colors: {
-        primary: "from-amber-400 via-yellow-400 to-orange-400",
-        secondary: "from-amber-500 to-yellow-500",
-        glow: "shadow-[0_0_50px_rgba(251,191,36,0.4)]",
-        text: "text-amber-900",
-      },
+      accentColor: "text-amber-600",
+      bgGradient: "from-amber-50 via-white to-yellow-50",
+      borderColor: "border-amber-200",
+      glowColor: "shadow-[0_0_40px_rgba(251,191,36,0.3)]",
+      badgeBg: "bg-gradient-to-r from-amber-400 to-yellow-500",
+      badgeText: "text-white",
     }
   }
   if (avgEngagement >= 5) {
     return {
       name: "Silver",
-      laserClass: "laser-card-silver",
-      colors: {
-        primary: "from-gray-300 via-slate-200 to-gray-400",
-        secondary: "from-gray-400 to-slate-300",
-        glow: "shadow-[0_0_40px_rgba(148,163,184,0.3)]",
-        text: "text-gray-700",
-      },
+      accentColor: "text-gray-600",
+      bgGradient: "from-gray-50 via-white to-slate-50",
+      borderColor: "border-gray-200",
+      glowColor: "shadow-[0_0_30px_rgba(148,163,184,0.25)]",
+      badgeBg: "bg-gradient-to-r from-gray-400 to-slate-400",
+      badgeText: "text-white",
     }
   }
   return {
     name: "Bronze",
-    laserClass: "laser-card-bronze",
-    colors: {
-      primary: "from-orange-700 via-amber-700 to-yellow-800",
-      secondary: "from-orange-800 to-amber-700",
-      glow: "shadow-[0_0_30px_rgba(180,83,9,0.3)]",
-      text: "text-orange-100",
-    },
+    accentColor: "text-orange-600",
+    bgGradient: "from-orange-50 via-white to-amber-50",
+    borderColor: "border-orange-200",
+    glowColor: "shadow-[0_0_30px_rgba(234,88,12,0.25)]",
+    badgeBg: "bg-gradient-to-r from-orange-400 to-amber-500",
+    badgeText: "text-white",
   }
 }
 
@@ -97,15 +97,15 @@ function ProfileImage({ src, alt }: { src?: string | null; alt: string }) {
 
   if (!src || imgError) {
     return (
-      <div className="w-24 h-24 rounded-2xl flex items-center justify-center text-2xl font-bold text-white bg-gradient-to-br from-blue-500 to-purple-600">
+      <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-xl font-bold text-white bg-gradient-to-br from-blue-500 to-purple-600 ring-4 ring-white shadow-lg">
         {initials}
       </div>
     )
   }
 
   return (
-    <div className="w-24 h-24 rounded-2xl overflow-hidden relative ring-4 ring-white/30">
-      {!loaded && <div className="absolute inset-0 bg-gray-300 animate-pulse" />}
+    <div className="w-20 h-20 rounded-2xl overflow-hidden relative ring-4 ring-white shadow-lg">
+      {!loaded && <div className="absolute inset-0 bg-gray-200 animate-pulse" />}
       <img
         src={src || "/placeholder.svg"}
         alt={alt}
@@ -123,11 +123,11 @@ export function ActivityCardModal({ isOpen, onClose, userData }: ActivityCardMod
   const [state, setState] = useState<GenerationState>("idle")
   const [analysisProgress, setAnalysisProgress] = useState(0)
   const [analysisText, setAnalysisText] = useState("Analyzing engagement...")
+  const [isDownloading, setIsDownloading] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
 
   const tier = getTier(userData.avgEngagement)
 
-  // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
       setState("idle")
@@ -139,7 +139,6 @@ export function ActivityCardModal({ isOpen, onClose, userData }: ActivityCardMod
     setState("analyzing")
     setAnalysisProgress(0)
 
-    // Simulate analysis with progress
     const texts = [
       "Analyzing engagement...",
       "Calculating growth metrics...",
@@ -167,24 +166,24 @@ export function ActivityCardModal({ isOpen, onClose, userData }: ActivityCardMod
   }
 
   const handleDownload = async () => {
-    if (!cardRef.current) return
+    if (!cardRef.current || isDownloading) return
 
-    // Use html2canvas for screenshot
+    setIsDownloading(true)
     try {
-      const html2canvas = (await import("html2canvas")).default
-      const canvas = await html2canvas(cardRef.current, {
-        backgroundColor: null,
-        scale: 2,
-        useCORS: true,
+      const dataUrl = await toPng(cardRef.current, {
+        quality: 1,
+        pixelRatio: 2,
+        cacheBust: true,
       })
 
       const link = document.createElement("a")
       link.download = `activity-card-${userData.username}.png`
-      link.href = canvas.toDataURL("image/png")
+      link.href = dataUrl
       link.click()
-    } catch {
-      // Fallback: alert user
-      alert("Screenshot functionality requires html2canvas. Card is ready to screenshot!")
+    } catch (err) {
+      console.error("Failed to generate image:", err)
+    } finally {
+      setIsDownloading(false)
     }
   }
 
@@ -210,13 +209,13 @@ export function ActivityCardModal({ isOpen, onClose, userData }: ActivityCardMod
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "rgba(0, 0, 0, 0.8)", backdropFilter: "blur(8px)" }}
+          style={{ background: "rgba(0, 0, 0, 0.6)", backdropFilter: "blur(8px)" }}
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="relative w-full max-w-md"
+            className="relative w-full max-w-sm"
           >
             {/* Close button */}
             <button
@@ -226,21 +225,21 @@ export function ActivityCardModal({ isOpen, onClose, userData }: ActivityCardMod
               <X className="w-5 h-5" />
             </button>
 
-            {/* Initial state - prompt to generate */}
+            {/* Initial state */}
             {state === "idle" && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 text-center border border-white/10"
+                className="bg-white rounded-3xl p-8 text-center shadow-2xl"
               >
-                <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
                   <Sparkles className="w-8 h-8 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-2">Generate Activity Card</h2>
-                <p className="text-gray-400 mb-8">Turn your Farcaster activity into a shareable visual card</p>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Generate Activity Card</h2>
+                <p className="text-gray-500 mb-8">Turn your Farcaster activity into a shareable visual card</p>
                 <Button
                   onClick={handleGenerate}
-                  className="w-full py-6 text-lg font-semibold rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white border-0"
+                  className="w-full py-6 text-lg font-semibold rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white border-0 shadow-lg"
                 >
                   <Sparkles className="w-5 h-5 mr-2" />
                   Generate Card
@@ -253,11 +252,10 @@ export function ActivityCardModal({ isOpen, onClose, userData }: ActivityCardMod
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 text-center border border-white/10"
+                className="bg-white rounded-3xl p-8 text-center shadow-2xl"
               >
                 <div className="space-y-6">
-                  {/* Animated metrics */}
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-3 gap-3">
                     {[
                       { icon: Heart, label: "Likes", value: userData.totalLikes },
                       { icon: MessageCircle, label: "Comments", value: userData.totalComments },
@@ -268,14 +266,10 @@ export function ActivityCardModal({ isOpen, onClose, userData }: ActivityCardMod
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.2 }}
-                        className="p-4 rounded-xl bg-white/5"
+                        className="p-3 rounded-xl bg-gray-50 border border-gray-100"
                       >
-                        <metric.icon className="w-5 h-5 mx-auto mb-2 text-blue-400" />
-                        <motion.span
-                          className="text-xl font-bold text-white block"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                        >
+                        <metric.icon className="w-4 h-4 mx-auto mb-2 text-blue-500" />
+                        <motion.span className="text-lg font-bold text-gray-900 block">
                           {Math.floor((analysisProgress / 100) * metric.value).toLocaleString()}
                         </motion.span>
                         <span className="text-xs text-gray-500">{metric.label}</span>
@@ -283,8 +277,7 @@ export function ActivityCardModal({ isOpen, onClose, userData }: ActivityCardMod
                     ))}
                   </div>
 
-                  {/* Animated line chart */}
-                  <div className="h-20 flex items-end gap-1">
+                  <div className="h-16 flex items-end gap-1 px-2">
                     {Array.from({ length: 20 }).map((_, i) => (
                       <motion.div
                         key={i}
@@ -298,117 +291,133 @@ export function ActivityCardModal({ isOpen, onClose, userData }: ActivityCardMod
                     ))}
                   </div>
 
-                  {/* Progress bar */}
                   <div className="space-y-2">
-                    <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                    <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
                       <motion.div
                         className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
                         initial={{ width: 0 }}
                         animate={{ width: `${analysisProgress}%` }}
                       />
                     </div>
-                    <p className="text-sm text-gray-400">{analysisText}</p>
+                    <p className="text-sm text-gray-500">{analysisText}</p>
                   </div>
                 </div>
               </motion.div>
             )}
 
-            {/* Complete state - show the card with laser glow effect */}
+            {/* Complete state - clean UI card matching dashboard style */}
             {state === "complete" && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                <div className={`laser-card ${tier.laserClass}`}>
+                <div
+                  ref={cardRef}
+                  className={`relative rounded-3xl overflow-hidden bg-gradient-to-br ${tier.bgGradient} border ${tier.borderColor} ${tier.glowColor}`}
+                  style={{ aspectRatio: "1 / 1.3" }}
+                >
+                  {/* Subtle top accent glow */}
                   <div
-                    ref={cardRef}
-                    className="relative rounded-3xl overflow-hidden"
-                    style={{ aspectRatio: "1 / 1.2" }}
-                  >
-                    {/* Background gradient based on tier */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${tier.colors.primary}`} />
+                    className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-24 opacity-60"
+                    style={{
+                      background: `radial-gradient(ellipse at center, ${
+                        tier.name === "Diamond"
+                          ? "rgba(139,92,246,0.3)"
+                          : tier.name === "Platinum"
+                            ? "rgba(148,163,184,0.3)"
+                            : tier.name === "Gold"
+                              ? "rgba(251,191,36,0.3)"
+                              : tier.name === "Silver"
+                                ? "rgba(148,163,184,0.2)"
+                                : "rgba(234,88,12,0.3)"
+                      } 0%, transparent 70%)`,
+                    }}
+                  />
 
-                    {/* Glow effect at top */}
-                    <div
-                      className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-32"
-                      style={{
-                        background: "linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 100%)",
-                        filter: "blur(20px)",
-                      }}
-                    />
-
-                    {/* Content */}
-                    <div className="relative h-full flex flex-col p-6">
-                      {/* Header */}
-                      <div className="flex items-center justify-between mb-6">
-                        <span className={`text-sm font-semibold ${tier.colors.text} opacity-80`}>Activity Tracker</span>
-                        <div className={`px-3 py-1 rounded-full text-xs font-bold bg-white/20 ${tier.colors.text}`}>
-                          {tier.name}
-                        </div>
+                  <div className="relative h-full flex flex-col p-5">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-xs font-medium text-gray-500 tracking-wide">Activity Tracker</span>
+                      <div
+                        className={`px-2.5 py-1 rounded-full text-xs font-semibold ${tier.badgeBg} ${tier.badgeText}`}
+                      >
+                        {tier.name}
                       </div>
+                    </div>
 
-                      {/* Profile section */}
-                      <div className="flex-1 flex flex-col items-center justify-center text-center">
-                        <ProfileImage src={userData.pfpUrl} alt={userData.displayName} />
-                        <h3 className={`text-2xl font-bold mt-4 ${tier.colors.text}`}>
-                          {userData.displayName}
-                          <span className="ml-2 inline-block">
-                            <svg className="w-5 h-5 inline text-blue-400" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </span>
-                        </h3>
-                        <p className={`text-sm ${tier.colors.text} opacity-70 mt-1`}>@{userData.username}</p>
+                    {/* Profile section */}
+                    <div className="flex-1 flex flex-col items-center justify-center text-center">
+                      <ProfileImage src={userData.pfpUrl} alt={userData.displayName} />
 
-                        {/* Status label */}
-                        <div className={`mt-3 px-4 py-1.5 rounded-full bg-white/15 ${tier.colors.text} text-sm`}>
-                          {userData.avgEngagement >= 20
-                            ? "High Engagement Creator"
-                            : userData.avgEngagement >= 10
-                              ? "Growing Account"
-                              : "Active Builder"}
-                        </div>
+                      <h3 className="text-xl font-bold text-gray-900 mt-4 flex items-center gap-1.5">
+                        {userData.displayName}
+                        <CheckCircle className="w-5 h-5 text-blue-500 fill-blue-500" />
+                      </h3>
+                      <p className="text-sm text-gray-500 mt-0.5">@{userData.username}</p>
+
+                      {/* Status badge */}
+                      <div className="mt-3 px-4 py-1.5 rounded-full bg-gray-100 text-gray-700 text-sm font-medium">
+                        {userData.avgEngagement >= 20
+                          ? "High Engagement Creator"
+                          : userData.avgEngagement >= 10
+                            ? "Growing Account"
+                            : "Active Builder"}
                       </div>
 
                       {/* Stats pills */}
-                      <div className="flex justify-center gap-3 mb-4">
-                        <div className={`px-4 py-2 rounded-xl bg-white/15 ${tier.colors.text}`}>
-                          <span className="text-lg font-bold">{userData.avgEngagement.toFixed(1)}</span>
-                          <span className="text-xs opacity-70 ml-1">Avg Eng</span>
+                      <div className="flex gap-3 mt-4">
+                        <div className="px-4 py-2 rounded-xl bg-white shadow-sm border border-gray-100">
+                          <span className={`text-lg font-bold ${tier.accentColor}`}>
+                            {userData.avgEngagement.toFixed(1)}
+                          </span>
+                          <span className="text-xs text-gray-500 ml-1">Avg Eng</span>
                         </div>
-                        <div className={`px-4 py-2 rounded-xl bg-white/15 ${tier.colors.text}`}>
-                          <span className="text-lg font-bold">{userData.avgLikesPerCast.toFixed(1)}</span>
-                          <span className="text-xs opacity-70 ml-1">Avg Likes</span>
+                        <div className="px-4 py-2 rounded-xl bg-white shadow-sm border border-gray-100">
+                          <span className={`text-lg font-bold ${tier.accentColor}`}>
+                            {userData.avgLikesPerCast.toFixed(1)}
+                          </span>
+                          <span className="text-xs text-gray-500 ml-1">Avg Likes</span>
                         </div>
                       </div>
+                    </div>
 
-                      {/* Bottom stats */}
-                      <div className="flex items-center justify-between pt-4 border-t border-white/20">
-                        <div className={`flex items-center gap-1.5 ${tier.colors.text}`}>
-                          <Users className="w-4 h-4 opacity-70" />
-                          <span className="font-semibold">{userData.followers.toLocaleString()}</span>
-                        </div>
-                        <div className={`flex items-center gap-1.5 ${tier.colors.text}`}>
-                          <MessageCircle className="w-4 h-4 opacity-70" />
-                          <span className="font-semibold">{userData.castsCount}</span>
-                        </div>
-                        <Button
-                          size="sm"
-                          className="rounded-full px-4 bg-white/90 text-gray-900 hover:bg-white font-semibold"
-                        >
-                          Follow +
-                        </Button>
+                    {/* Bottom stats */}
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                      <div className="flex items-center gap-1.5 text-gray-700">
+                        <Users className="w-4 h-4 text-gray-400" />
+                        <span className="font-semibold">{userData.followers.toLocaleString()}</span>
                       </div>
+                      <div className="flex items-center gap-1.5 text-gray-700">
+                        <MessageCircle className="w-4 h-4 text-gray-400" />
+                        <span className="font-semibold">{userData.castsCount}</span>
+                      </div>
+                      <Button
+                        size="sm"
+                        className="rounded-full px-4 bg-gray-900 text-white hover:bg-gray-800 font-semibold text-xs"
+                      >
+                        Follow +
+                      </Button>
+                    </div>
 
-                      {/* Mini chart */}
-                      <div className="mt-4 h-12 flex items-end gap-0.5">
-                        {Array.from({ length: 30 }).map((_, i) => (
-                          <div
-                            key={i}
-                            className="flex-1 rounded-t bg-white/30"
-                            style={{
-                              height: `${Math.max(15, Math.sin((i / 30) * Math.PI * 2) * 40 + 50 + Math.random() * 20)}%`,
-                            }}
-                          />
-                        ))}
-                      </div>
+                    {/* Mini activity chart */}
+                    <div className="mt-3 h-10 flex items-end gap-0.5">
+                      {Array.from({ length: 30 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className={`flex-1 rounded-t ${
+                            tier.name === "Diamond"
+                              ? "bg-violet-300"
+                              : tier.name === "Platinum"
+                                ? "bg-slate-300"
+                                : tier.name === "Gold"
+                                  ? "bg-amber-300"
+                                  : tier.name === "Silver"
+                                    ? "bg-gray-300"
+                                    : "bg-orange-300"
+                          }`}
+                          style={{
+                            height: `${Math.max(15, Math.sin((i / 30) * Math.PI * 2) * 35 + 50 + Math.random() * 15)}%`,
+                            opacity: 0.7 + Math.random() * 0.3,
+                          }}
+                        />
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -417,14 +426,15 @@ export function ActivityCardModal({ isOpen, onClose, userData }: ActivityCardMod
                 <div className="flex gap-3">
                   <Button
                     onClick={handleDownload}
-                    className="flex-1 py-5 rounded-2xl bg-white text-gray-900 hover:bg-gray-100 font-semibold"
+                    disabled={isDownloading}
+                    className="flex-1 py-5 rounded-2xl bg-white text-gray-900 hover:bg-gray-50 font-semibold border border-gray-200 shadow-sm"
                   >
                     <Download className="w-4 h-4 mr-2" />
-                    Download
+                    {isDownloading ? "Saving..." : "Download"}
                   </Button>
                   <Button
                     onClick={handleShare}
-                    className="flex-1 py-5 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold border-0"
+                    className="flex-1 py-5 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold border-0 shadow-lg"
                   >
                     <Share2 className="w-4 h-4 mr-2" />
                     Share
